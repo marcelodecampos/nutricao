@@ -1,3 +1,6 @@
+# python3
+# -*- coding: utf-8 -*-
+# pylint: disable=too-few-public-methods, too-many-arguments, too-many-locals, too-many-statements, line-too-long
 """init module for login component."""
 
 from .login import login_form

@@ -1,16 +1,16 @@
+#!  python3
+# -*- coding: utf-8 -*-
+# pylint: disable=too-few-public-methods, too-many-instance-attributes, too-many-arguments, too-many-locals, too-many-statements, line-too-long, invalid-name logging-fstring-interpolation inherit-non-class
 """Application state module.
 This module contains the state of the application,
 including user information and other relevant data."""
 
-# -*- coding: utf-8 -*-
-# pylint: disable=too-few-public-methods, too-many-instance-attributes, too-many-arguments, too-many-locals, too-many-statements, line-too-long, invalid-name logging-fstring-interpolation inherit-non-class
 import logging
 import bcrypt
-import asyncio
 import reflex as rx
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
-from entities import UserContactDocument, Login, login
+from entities import UserContactDocument, Login
 
 from ..utils.app_user import AppUser
 

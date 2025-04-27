@@ -1,11 +1,16 @@
+# python3
+# -*- coding: utf-8 -*-
+# pylint: disable=too-few-public-methods, too-many-arguments, too-many-locals, too-many-statements, line-too-long
 """Welcome to Reflex! This file outlines the steps to create a basic app."""
 
 import reflex as rx
 
 from rxconfig import config
+from nutricao.state.base_app_state import BaseAppState
+from nutricao.components.login import login_form
 
 
-def index_form() -> rx.Component:
+def logged_index_form() -> rx.Component:
     """Welcome Page (Index)"""
     return rx.container(
         rx.color_mode.button(position="top-right"),
@@ -26,4 +31,13 @@ def index_form() -> rx.Component:
             min_height="85vh",
         ),
         rx.logo(),
+    )
+
+
+def index_form():
+    """Index page component."""
+    return rx.cond(
+        BaseAppState.logged_in,
+        logged_index_form(),
+        login_form(),
     )

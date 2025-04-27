@@ -4,13 +4,13 @@
 from typing import Optional
 
 import reflex as rx
-from entities import Login as LoginEntity
+from .sys_user import SysUser
 
 
 class BaseAppState(rx.State):
     """The base state for the app."""
 
-    Login: Optional[LoginEntity] = None
+    user: Optional[SysUser] = None
 
     def logout(self):
         """Log out a user."""

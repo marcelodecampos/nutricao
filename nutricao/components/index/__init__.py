@@ -1,3 +1,6 @@
+# python3
+# -*- coding: utf-8 -*-
+# pylint: disable=too-few-public-methods
 """init module for login component."""
 
 from .index import index_form

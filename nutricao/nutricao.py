@@ -1,13 +1,15 @@
+#!  python3
+# -*- coding: utf-8 -*-
+# pylint: disable=not-callable
 """Welcome to Reflex! This file outlines the steps to create a basic app."""
 
-# pylint: disable=not-callable
 import logging
 
 import reflex as rx
 
 from nutricao.components.login import login_form
 from nutricao.components.index import index_form
-from nutricao.state.base_app_state import BaseAppState
+from nutricao.components.signup import signup_form
 
 
 # Configure basic logging
@@ -27,5 +29,6 @@ app = rx.App(
         accent_color="grass",
     ),
 )
+app.add_page(signup_form, route="/signup")
 app.add_page(login_form, route="/login")
-app.add_page(index_form, route="/", on_load=BaseAppState.check_login)
+app.add_page(index_form, route="/")

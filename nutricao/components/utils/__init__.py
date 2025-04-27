@@ -1,3 +1,6 @@
+#!  python3
+# -*- coding: utf-8 -*-
+# pylint: disable=not-callable
 """init file for utils module."""
 
 from .email import email_input

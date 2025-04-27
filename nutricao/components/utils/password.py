@@ -1,3 +1,6 @@
+#!  python3
+# -*- coding: utf-8 -*-
+# pylint: disable=not-callable
 """Component for the application."""
 
 import reflex as rx

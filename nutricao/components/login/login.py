@@ -1,7 +1,8 @@
-"""Login form component for the application."""
-
+# python3
 # -*- coding: utf-8 -*-
 # pylint: disable=too-few-public-methods, too-many-arguments, too-many-locals, too-many-statements, line-too-long
+"""Login form component for the application."""
+
 import reflex as rx
 from .state import LoginState
 
@@ -85,7 +86,7 @@ def login_form() -> rx.Component:
                     rx.heading("Entrar na sua conta", size="6", as_="h2", width="100%"),
                     rx.hstack(
                         rx.text("Novo por aqui?", size="3", text_align="left"),
-                        rx.link("Inscreva-se", href="#", size="3"),
+                        rx.link("Inscreva-se", href="/signup", size="3"),
                         spacing="2",
                         opacity="0.8",
                         width="100%",
@@ -104,6 +105,8 @@ def login_form() -> rx.Component:
                             size="3",
                             width="100%",
                             type="submit",
+                            id="login_button",
+                            name="login_button",
                         ),
                         justify="start",
                         direction="column",
@@ -113,6 +116,10 @@ def login_form() -> rx.Component:
                     spacing="6",
                     width="100%",
                     on_submit=LoginState.handle_submit,
+                    prevent_default=True,
+                    id="login_form",
+                    name="login_form",
+                    method="POST",
                 ),
                 rx.hstack(
                     rx.divider(margin="0"),
