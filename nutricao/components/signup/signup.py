@@ -4,23 +4,18 @@
 """Login form component for the application."""
 
 import reflex as rx
-from nutricao.components.select.gender import gender_options
 
 
 def name_input() -> rx.Component:
     """Name input component."""
     return rx.vstack(
-        rx.text("Qual seu Nome", size="3", weight="medium", text_align="left", width="100%"),
-        rx.select(
-            ["Sr.", "Sra.", "Srta"],
-            value="Sr.",
-        ),
+        rx.text("Qual seu Nome", size="2", weight="medium", text_align="left", width="100%"),
         rx.input(
             rx.input.slot(rx.icon("user")),
             placeholder="seu name",
             id="login_id",
             name="login_id",
-            size="3",
+            size="1",
             width="100%",
             required=True,
             min_length=10,
@@ -36,13 +31,13 @@ def name_input() -> rx.Component:
 def identification_input() -> rx.Component:
     """CPF input component."""
     return rx.vstack(
-        rx.text("CPF", size="3", weight="medium", text_align="left", width="100%"),
+        rx.text("CPF", size="2", weight="medium", text_align="left", width="100%"),
         rx.input(
             rx.input.slot(rx.icon("user")),
             placeholder="CPF",
             id="cpf",
             name="cpf",
-            size="3",
+            size="1",
             width="100%",
             required=True,
         ),
@@ -55,34 +50,24 @@ def identification_input() -> rx.Component:
 def email_input() -> rx.Component:
     """Email input component."""
     return rx.vstack(
-        rx.text("Seu E-mail", size="3", weight="medium", text_align="left", width="100%"),
+        rx.text("Seu E-mail", size="2", weight="medium", text_align="left", width="100%"),
         rx.input(
             rx.input.slot(rx.icon("user")),
-            placeholder="user@reflex.dev",
+            placeholder="E-mail",
             type="email",
             id="login_id",
             name="login_id",
-            size="3",
+            size="1",
             width="100%",
             required=True,
         ),
-        spacing="2",
-        justify="start",
-        width="100%",
-    )
-
-
-def birthdate_input() -> rx.Component:
-    """Email input component."""
-    return rx.vstack(
-        rx.text("Data de Nascimento", size="3", weight="medium", text_align="left", width="100%"),
         rx.input(
-            rx.input.slot(rx.icon("cake")),
-            placeholder="user@reflex.dev",
-            type="date",
-            id="birthdate",
-            name="birthdate",
-            size="3",
+            rx.input.slot(rx.icon("user")),
+            placeholder="Confirme seu e-mail",
+            type="email",
+            id="confirmEmail",
+            name="confirmEmail",
+            size="1",
             width="100%",
             required=True,
         ),
@@ -96,8 +81,8 @@ def password_input() -> rx.Component:
     """Password input component."""
     return rx.vstack(
         rx.hstack(
-            rx.text("Senha", size="3", weight="medium"),
-            rx.link("Esqueceu a senha?", href="#", size="3"),
+            rx.text("Senha", size="2", weight="medium"),
+            rx.link("Esqueceu a senha?", href="#", size="2"),
             justify="between",
             width="100%",
         ),
@@ -107,7 +92,17 @@ def password_input() -> rx.Component:
             type="password",
             name="password",
             id="password",
-            size="3",
+            size="1",
+            width="100%",
+            required=True,
+        ),
+        rx.input(
+            rx.input.slot(rx.icon("lock")),
+            placeholder="Confirme a sua senha",
+            type="password",
+            name="confirmPassword",
+            id="confirmPassword",
+            size="1",
             width="100%",
             required=True,
         ),
@@ -117,21 +112,21 @@ def password_input() -> rx.Component:
 
 
 def innercard_component() -> rx.Component:
+    """Inner card component."""
     return rx.card(
         rx.vstack(
             rx.flex(
-                rx.heading("Crie a sua conta", size="6", as_="h2", width="100%"),
+                rx.heading("Crie a sua conta", size="4", as_="h2", width="100%"),
             ),
             rx.form(
                 rx.flex(
                     name_input(),
                     identification_input(),
                     email_input(),
-                    gender_options(),
-                    birthdate_input(),
+                    password_input(),
                     rx.button(
                         "Cadastrar-se",
-                        size="3",
+                        size="2",
                         width="100%",
                         type="submit",
                     ),
@@ -151,7 +146,7 @@ def innercard_component() -> rx.Component:
             spacing="6",
             width="100%",
         ),
-        size="4",
+        size="2",
         max_width="35em",
         width="100%",
     )
