@@ -17,6 +17,7 @@ from .person import (
 from .places import Country, State, City
 from .food import Food, FoodGroup, FoodComponent, FoodComposition
 from .login import Login
+from .audit_log import AuditLog
 
 
 __all__ = [
@@ -43,6 +44,7 @@ __all__ = [
     "FoodComponent",
     "FoodComposition",
     "UserContactDocument",
+    "AuditLog",
 ]
 
 __version__ = "0.0.1"

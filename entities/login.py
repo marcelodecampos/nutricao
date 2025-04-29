@@ -3,6 +3,8 @@
 """login entity modules"""
 
 from datetime import datetime
+import bcrypt
+
 from sqlalchemy import (
     BigInteger,
     ForeignKey,
@@ -14,10 +16,10 @@ from sqlalchemy import (
     DateTime,
     PrimaryKeyConstraint,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from utils.logger import get_logger
-from .base import Base, InsertDate, InsertUpdateDate, SimplePassword
+from .base import Base, InsertDate, InsertUpdateDate
 from .person import User
 
 
@@ -30,7 +32,7 @@ login_fk = ForeignKey(
 )
 
 
-class Login(SimplePassword, InsertUpdateDate):
+class Login(InsertUpdateDate):
     """login"""
 
     __tablename__ = "login"
@@ -40,6 +42,7 @@ class Login(SimplePassword, InsertUpdateDate):
         ForeignKey("users.id"),
         primary_key=True,
     )
+    password: Mapped[str] = mapped_column(String(64))
     attempts: Mapped[int] = mapped_column(
         Integer,
         default=0,
@@ -60,6 +63,18 @@ class Login(SimplePassword, InsertUpdateDate):
     def __str__(self):
         return f"Login(), {self.user}"
 
+    @validates("password")
+    def validate_password(self, key: str, field: str) -> str:
+        """crypt this password"""
+        # TODO : validate password strength
+        if field.startswith("$2b$") and len(field) >= 60:
+            # already encrypted... pass
+            return field
+        msg = f"encrypting password {field}"
+        LOGGER.debug(msg)
+        hashed_password = bcrypt.hashpw(field.encode(), bcrypt.gensalt())
+        return hashed_password.decode()
+
 
 class LoginAudit(InsertDate, Base):
     """class audit login"""
@@ -77,7 +92,7 @@ class LoginAudit(InsertDate, Base):
     __table_args__ = (__created_at_key, __pk)
 
 
-class LastUsedPasswords(SimplePassword, InsertDate):
+class LastUsedPasswords(InsertDate):
     """class Last Used"""
 
     __tablename__ = "last_used_password"
@@ -85,6 +100,7 @@ class LastUsedPasswords(SimplePassword, InsertDate):
         BigInteger,
         ForeignKey("login.user_id", ondelete="CASCADE"),
     )
+    password: Mapped[str] = mapped_column(String(64))
     login: Mapped["Login"] = relationship(lazy="immediate")
     __pk = PrimaryKeyConstraint("user_id", "password")
     __table_args__ = (__pk,)

@@ -4,11 +4,9 @@
 """module file"""
 
 import json
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 from functools import total_ordering
-import bcrypt
 from sqlalchemy import DateTime, Integer, String, Boolean, BigInteger, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
 from sqlalchemy.sql import func
@@ -40,7 +38,7 @@ class SerialID(Base):
 
     __abstract__ = True
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True, sort_order=1)
 
     def __str__(self):
         return f"User(id={self.id})"
@@ -78,6 +76,7 @@ class InsertDate:
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),  # pylint: disable=not-callable
+        sort_order=98,
     )
 
 
@@ -89,6 +88,7 @@ class InsertUpdateDate(InsertDate, Base):
         DateTime(timezone=True),
         nullable=True,
         onupdate=func.now(),  # pylint: disable=not-callable
+        sort_order=99,
     )
 
 
@@ -96,7 +96,7 @@ class Name(SerialID, InsertUpdateDate):
     """Abstract class to implement a name on almost every table"""
 
     __abstract__ = True
-    name: Mapped[str] = mapped_column(String(DEFAULT_NAME_FIELD_SIZE), nullable=False)
+    name: Mapped[str] = mapped_column(String(DEFAULT_NAME_FIELD_SIZE), nullable=False, sort_order=2)
 
     @validates("name")
     def validate_name(self, key, field: str) -> str:
@@ -120,27 +120,12 @@ class SimpleTable(UniqName):
     """Abstract class to implement a name on almost every table"""
 
     __abstract__ = True
-    is_valid: Mapped[bool] = mapped_column(Boolean, default=True, server_default="t")
+    is_valid: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        server_default="t",
+        sort_order=97,
+    )
 
     def __str__(self):
         return super().__str__() + f", 'isvalid': {self.is_valid}"
-
-
-class SimplePassword(Base):
-    """Abstract class to implement simple password every table"""
-
-    __abstract__ = True
-
-    password: Mapped[str] = mapped_column(String(64))
-
-    @validates("password")
-    def validate_password(self, key: str, field: str) -> str:
-        """crypt this password"""
-        # TODO : validate password strength
-        if field.startswith("$2b$") and len(field) >= 60:
-            # already encrypted... pass
-            return field
-        msg = f"encrypting password {field}"
-        LOGGER.debug(msg)
-        hashed_password = bcrypt.hashpw(field.encode(), bcrypt.gensalt())
-        return hashed_password.decode()

@@ -49,8 +49,10 @@ class Title(Name):
     """Title class table"""
 
     __tablename__ = "title"
-    gender_id: Mapped[Optional[int]] = mapped_column(ForeignKey("gender.id"), nullable=True)
-    shortening: Mapped[str] = mapped_column(String(32))
+    gender_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("gender.id"), nullable=True, sort_order=3
+    )
+    shortening: Mapped[str] = mapped_column(String(32), sort_order=4)
 
     gender: Mapped[Optional[Gender]] = relationship(lazy="immediate")
 
@@ -62,16 +64,17 @@ class ContactDocument(SimpleTable):
     """Base class User"""
 
     __tablename__ = "contact_document"
-    mask: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    allow_login: Mapped[bool] = mapped_column(Boolean, default=False, server_default="f")
-    validation_regex: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    sub_regex: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    contdoc_type: Mapped[str] = mapped_column(
-        CHAR,
-        CONTDOC_CHECK_CONSTRAINT,
+    mask: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, sort_order=3)
+    allow_login: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="f", sort_order=4
     )
+    validation_regex: Mapped[Optional[str]] = mapped_column(
+        String(128), nullable=True, sort_order=5
+    )
+    sub_regex: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, sort_order=6)
+    contdoc_type: Mapped[str] = mapped_column(CHAR, CONTDOC_CHECK_CONSTRAINT, sort_order=7)
     person_type: Mapped[Optional[str]] = mapped_column(
-        CHAR, TYPE_PERSON_CHECK_CONSTRAINT, nullable=True
+        CHAR, TYPE_PERSON_CHECK_CONSTRAINT, nullable=True, sort_order=8
     )
 
     def __str__(self):
@@ -89,7 +92,10 @@ class UserContactDocument(Base):
     """Relationship table user <---> contact_document"""
 
     __tablename__ = "user_contact_document"
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        primary_key=True,
+    )
     contdoc_id: Mapped[int] = mapped_column(ForeignKey("contact_document.id"), primary_key=True)
     name: Mapped[str] = mapped_column(String(128), index=True, primary_key=True)
     is_main: Mapped[bool] = mapped_column(Boolean, server_default="f", default=False)
@@ -126,14 +132,17 @@ class User(Name):
         String(DEFAULT_NAME_FIELD_SIZE),
         nullable=True,
         index=True,
+        sort_order=3,
     )
     birthdate: Mapped[date] = mapped_column(
         Date(),
         nullable=True,
+        sort_order=4,
     )
     person_type: Mapped[str] = mapped_column(
         CHAR,
         TYPE_PERSON_CHECK_CONSTRAINT,
+        sort_order=5,
     )
 
     contact_document: Mapped[Optional[list[UserContactDocument]]] = relationship(
@@ -160,13 +169,19 @@ class Person(User):
         "polymorphic_identity": "F",
     }
 
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
-    gender_id: Mapped[Optional[int]] = mapped_column(ForeignKey("gender.id"), nullable=True)
-    title_id: Mapped[Optional[int]] = mapped_column(ForeignKey("title.id"), nullable=True)
-    marital_status_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("marital_status.id"), nullable=True
+    id: Mapped[int] = mapped_column(ForeignKey("users.id"), sort_order=1, primary_key=True)
+    gender_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("gender.id"), sort_order=5, nullable=True
     )
-    education_id: Mapped[Optional[int]] = mapped_column(ForeignKey("education.id"), nullable=True)
+    title_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("title.id"), nullable=True, sort_order=6
+    )
+    marital_status_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("marital_status.id"), nullable=True, sort_order=6
+    )
+    education_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("education.id"), nullable=True, sort_order=7
+    )
 
     title: Mapped[Optional[Title]] = relationship()
     maritalstatus: Mapped[Optional[MaritalStatus]] = relationship()
@@ -182,9 +197,9 @@ class Company(User):
         "polymorphic_identity": "J",
     }
 
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True, sort_order=3)
     cnpj: Mapped[str] = mapped_column(
-        String(CNPJ_SIZE + len(STOP_CHARS)), unique=True, nullable=False
+        String(CNPJ_SIZE + len(STOP_CHARS)), unique=True, nullable=False, sort_order=4
     )
 
     @validates("cnpj")

@@ -5,6 +5,7 @@ Revises: ${down_revision | comma,n}
 Create Date: ${create_date}
 
 """
+import sqlalchemy as sa
 from typing import Sequence, Union
 
 from sqlalchemy.orm import Session
