@@ -9,7 +9,7 @@ import reflex as rx
 
 from nutricao.components.login import login_form
 from nutricao.components.index import index_form
-from nutricao.components.signup import signup_form
+from nutricao.components.signup import signup_form, signup_ok_form
 
 
 # Configure basic logging
@@ -29,6 +29,7 @@ app = rx.App(
         accent_color="grass",
     ),
 )
+app.add_page(signup_ok_form, route="/signup_ok")
 app.add_page(signup_form, route="/signup")
 app.add_page(login_form, route="/login")
 app.add_page(index_form, route="/")

@@ -3,7 +3,7 @@
 # pylint: disable=not-callable
 """init module for components."""
 
-from .signup import signup_form
+from .signup import signup_form, signup_ok_form
 
 
 __all__ = ["signup_form"]
