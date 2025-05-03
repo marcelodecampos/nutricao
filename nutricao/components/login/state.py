@@ -31,9 +31,6 @@ class LoginState(rx.State):
         # This is a placeholder implementation. Replace with actual logic to find a user by their document.
         logger.debug("find_login_by_document")
         # Print out the handlers
-        for handler in logger.handlers:
-            print(handler)
-
         with rx.session() as db_session:
             query = (
                 select(Login)
@@ -54,6 +51,7 @@ class LoginState(rx.State):
 
     def logout(self) -> None:
         """Logout the user."""
+        logger.debug("Logout User")
         self.user = None
 
     @rx.event
@@ -65,3 +63,6 @@ class LoginState(rx.State):
         login_entity = self.find_login_by_document(form_data["login_id"], form_data["password"])
         if not login_entity:
             yield rx.toast.error("Usuário ou senha inválidos.")
+            return
+        self.user = AppUser(login_entity.user_id)
+        return await rx.redirect("/signup_ok")

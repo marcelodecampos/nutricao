@@ -18,7 +18,9 @@ dependencies = [
     "reflex[all] (>=0.7.7,<0.8.0)",
     "reflex-ag-grid (>=0.0.11,<0.0.12)",
     "psycopg (>=3.2.6,<4.0.0)",
-    "reflex-icon-library (>=1.4.1,<2.0.0)"
+    "reflex-icon-library (>=1.4.1,<2.0.0)",
+    "faker (>=37.1.0,<38.0.0)",
+    "uvicorn (>=0.34.2,<0.35.0)"
 ]
 
 

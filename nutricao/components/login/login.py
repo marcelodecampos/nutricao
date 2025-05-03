@@ -58,7 +58,7 @@ def password_input() -> rx.Component:
     return rx.vstack(
         rx.hstack(
             rx.text("Senha", size="3", weight="medium"),
-            rx.link("Esqueceu a senha?", href="#", size="3"),
+            rx.link("Esqueceu a senha?", href="/forgot_password", size="3"),
             justify="between",
             width="100%",
         ),

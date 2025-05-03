@@ -7,13 +7,11 @@ import logging
 
 import reflex as rx
 
-from nutricao.components.login import login_form
-from nutricao.components.index import index_form
-from nutricao.components.signup import signup_form, signup_ok_form
-
+# pylint: disable=wrong-import-position, wrong-import-order, unused-import, import-outside-toplevel
+from .routes import add_routes
 
 # Configure basic logging
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 sqlalchemy_logger = logging.getLogger("sqlalchemy.engine")
 sqlalchemy_logger.setLevel(logging.INFO)
 
@@ -29,7 +27,5 @@ app = rx.App(
         accent_color="grass",
     ),
 )
-app.add_page(signup_ok_form, route="/signup_ok")
-app.add_page(signup_form, route="/signup")
-app.add_page(login_form, route="/login")
-app.add_page(index_form, route="/")
+
+add_routes(app)
