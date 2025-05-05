@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=not-callable
 """module file for commom layout."""
+from operator import call
 from types import FunctionType
 from entities.login import Login
 from nutricao.components.login.state import LoginState
@@ -69,10 +70,9 @@ def sidebar_items() -> rx.Component:
     )
 
 
-def desktop_sidebar() -> rx.Component:
-    """Create a sidebar profile section."""
-    return rx.desktop_only(
-        rx.vstack(
+
+def sidebar()->rx.Component:
+    return rx.vstack(
             rx.hstack(
                 rx.image(
                     src="/dietista.png",
@@ -90,7 +90,7 @@ def desktop_sidebar() -> rx.Component:
             rx.spacer(),
             rx.vstack(
                 rx.vstack(
-                    sidebar_item("Settings", "settings", "/#"),
+                    sidebar_item("Settings", "settings", "/settings"),
                     logout_item("Log out", "log-out"),
                     spacing="1",
                     width="100%",
@@ -136,12 +136,21 @@ def desktop_sidebar() -> rx.Component:
             # z_index="5",
             padding_x="1em",
             padding_y="1.5em",
-            bg=rx.color("accent", 3),
             align="start",
             # height="100%",
             height="650px",
             width="16em",
+        )
+
+
+
+def desktop_sidebar(component: rx.Component) -> rx.Component:
+    """Create a sidebar profile section."""
+    return rx.desktop_only(
+        rx.box(
+            sidebar(),
         ),
+        rx.box(component),
     )
 
 
@@ -216,7 +225,6 @@ def mobile_sidebar() -> rx.Component:
                     height="100%",
                     width="20em",
                     padding="1.5em",
-                    bg=rx.color("accent", 2),
                 ),
                 width="100%",
             ),
@@ -251,11 +259,8 @@ def navbar_icons_menu_item(text: str, icon: str, url: str) -> rx.Component:
     )
 
 
-def public_commom_form(callback:FunctionType) -> rx.Component:
+def public_commom_form(callback_result:rx.Component) -> rx.Component:
     """Create a common form for public pages."""
-    callback_result=rx.box()
-    if callback is not None:
-        callback_result = rx.box (callback())
     return rx.box(
         rx.desktop_only(
             rx.hstack(
@@ -316,7 +321,6 @@ def public_commom_form(callback:FunctionType) -> rx.Component:
             ),
         ),
         callback_result,
-        bg=rx.color("accent", 3),
         padding="1em",
         # position="fixed",
         # top="0px",
@@ -324,18 +328,21 @@ def public_commom_form(callback:FunctionType) -> rx.Component:
         width="100%",
     )
 
-def private_commom_form(callback:FunctionType) -> rx.Component:
+def private_commom_form(callback_result:rx.Component) -> rx.Component:
     return rx.box(
-        desktop_sidebar(),
+        desktop_sidebar(callback_result),
         mobile_sidebar(),
     )
 
 def commom_layout(callback:FunctionType) -> rx.Component:
     """Create a common layout for the app."""
+    callback_result=rx.box()
+    if callback is not None:
+        callback_result = rx.box (callback())
     return rx.box(
         rx.cond(
             LoginState.is_logged_in,
-            private_commom_form(callback),
-            public_commom_form(callback),
+            private_commom_form(callback_result),
+            public_commom_form(callback_result),
         ),
     )

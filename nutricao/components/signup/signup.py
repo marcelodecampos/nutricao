@@ -175,7 +175,7 @@ def signup_form() -> rx.Component:
     return rx.center(
         innercard_component(),
         width="100%",
-        height="100vh",
+        height="80vh",
         padding="2em",
     )
 
@@ -209,6 +209,6 @@ def signup_ok_form() -> rx.Component:
             width="100%",
         ),
         width="100%",
-        height="100vh",
+        height="80vh",
         padding="2em",
     )

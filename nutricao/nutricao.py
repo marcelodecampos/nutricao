@@ -24,7 +24,7 @@ app = rx.App(
         appearance="dark",
         has_background=True,
         radius="large",
-        accent_color="grass",
+        accent_color="sky",
     ),
 )
 

@@ -133,10 +133,10 @@ def login_form() -> rx.Component:
                 width="100%",
             ),
             size="4",
-            max_width="400px",
+            max_width="28em",
             width="100%",
         ),
         width="100%",
-        height="100vh",
+        height="80vh",
         #padding="2em",
     )

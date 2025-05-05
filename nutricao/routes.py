@@ -4,6 +4,7 @@
 """init module form application"""
 
 import nutricao
+import reflex as rx
 
 
 def add_routes(app):
@@ -53,6 +54,15 @@ def add_routes(app):
     app.add_page(
         commom_layout(forgot_password_form),
         route="/forgot_password",
+        title="Recuperar a Senha",
+        description="Recuperar a senha",
+        image="https://reflex.dev/logo.png",
+    )
+
+
+    app.add_page(
+        commom_layout(rx.theme_panel),
+        route="/settings",
         title="Recuperar a Senha",
         description="Recuperar a senha",
         image="https://reflex.dev/logo.png",

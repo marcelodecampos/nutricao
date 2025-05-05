@@ -148,7 +148,7 @@ def reset_password_form() -> rx.Component:
     return rx.center(
         reset_password_component(),
         width="100%",
-        height="100vh",
+        height="80vh",
         padding="2em",
     )
 
@@ -158,6 +158,6 @@ def forgot_password_form() -> rx.Component:
     return rx.center(
         forgot_password_component(),
         width="100%",
-        height="100vh",
+        height="80vh",
         padding="2em",
     )
