@@ -2,13 +2,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=not-callable
 """Welcome to Reflex! This file outlines the steps to create a basic app."""
-
 import logging
-
-import reflex as rx
-
-# pylint: disable=wrong-import-position, wrong-import-order, unused-import, import-outside-toplevel
-from .routes import add_routes
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -17,6 +11,12 @@ sqlalchemy_logger.setLevel(logging.INFO)
 
 for handler in sqlalchemy_logger.handlers:
     handler.setLevel(logging.INFO)
+
+
+import reflex as rx
+# pylint: disable=wrong-import-position, wrong-import-order, unused-import, import-outside-toplevel
+from .routes import add_routes
+
 
 
 app = rx.App(

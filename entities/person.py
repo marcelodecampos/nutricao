@@ -3,6 +3,7 @@
 # pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument)
 """Module File"""
 
+from enum import Enum
 from re import sub as regex_substitute
 from typing import Optional, Self
 from datetime import date
@@ -59,6 +60,11 @@ class Title(Name):
     uk = UniqueConstraint("name", "gender_id")
     __table_args__ = (uk,)
 
+class ContDocID(Enum):
+    CPF, PASSPORT, IDENTITY, PIS_PASEP, VOTER_ID, BIRTH_CERTIFICATE, CNPJ, CELL_PHONE, PHONE, EMAIL = range(1, 11)
+
+
+
 
 class ContactDocument(SimpleTable):
     """Base class User"""
@@ -101,7 +107,7 @@ class UserContactDocument(Base):
     is_main: Mapped[bool] = mapped_column(Boolean, server_default="f", default=False)
 
     user: Mapped["User"] = relationship(back_populates="contact_document")
-    contdoc: Mapped[ContactDocument] = relationship()
+    contdoc: Mapped[ContactDocument] = relationship(lazy="joined", innerjoin=True,)
 
     @validates("name")
     def validate_name(self, key: str, field: str):
@@ -146,7 +152,7 @@ class User(Name):
     )
 
     contact_document: Mapped[Optional[list[UserContactDocument]]] = relationship(
-        back_populates="user",
+        back_populates="user", lazy="joined", innerjoin=False,
     )
 
     def add(self, new_item: UserContactDocument) -> Self:
@@ -154,11 +160,21 @@ class User(Name):
         if not self.contact_document:
             self.contact_document = []
         new_item.user = self
+        new_item.user_id = self.id
         self.contact_document.append(new_item)
         return self
 
     def __str__(self):
         return f"User(type={self.person_type}, birthdate={self.birthdate}, {super().__str__()}"
+
+
+    @property
+    def email(self) -> str:
+        """Get the email of the user"""
+        for item in self.contact_document:
+            if item.contdoc and item.contdoc_id == ContDocID.EMAIL.value:
+                return item.name
+        return ""
 
 
 class Person(User):
@@ -169,7 +185,7 @@ class Person(User):
         "polymorphic_identity": "F",
     }
 
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), sort_order=1, primary_key=True)
+    id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete='CASCADE'), sort_order=1, primary_key=True)
     gender_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("gender.id"), sort_order=5, nullable=True
     )
@@ -188,6 +204,19 @@ class Person(User):
     gender: Mapped[Optional[Gender]] = relationship()
     education: Mapped[Optional[Education]] = relationship()
 
+    @property
+    def cpf(self) -> str:
+        """Get the email of the user"""
+        for item in self.contact_document:
+            if item.contdoc and item.contdoc.id == ContDocID.CPF.value:
+                return item.name
+        return ""
+
+    @property
+    def first_name(self) -> str:
+        """Get the email of the user"""
+        return self.name.split(" ")[0]
+
 
 class Company(User):
     """Base class Company"""
@@ -198,15 +227,21 @@ class Company(User):
     }
 
     id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True, sort_order=3)
-    cnpj: Mapped[str] = mapped_column(
-        String(CNPJ_SIZE + len(STOP_CHARS)), unique=True, nullable=False, sort_order=4
-    )
 
     @validates("cnpj")
-    def validate_cpf(self, key, field: str) -> str:
+    def validate_cnpj(self, key, field: str) -> str:
         """validate CPF"""
         if field:
             field = regex_substitute(STOP_CHARS, "", field)
             field = field.zfill(CNPJ_SIZE)
             return field
         raise ValueError("CPF could not be null")
+
+
+    @property
+    def cnpj(self) -> str:
+        """Get the email of the user"""
+        for item in self.contact_document:
+            if item.contdoc and item.contdoc.id == 7:
+                return item.name
+        return ""

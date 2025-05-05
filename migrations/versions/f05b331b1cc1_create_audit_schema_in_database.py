@@ -22,11 +22,20 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.execute(
-        """
-        CREATE SCHEMA IF NOT EXISTS audit;
-        """
-    )
+
+    query="CREATE SCHEMA IF NOT EXISTS audit"""
+
+    connection = op.get_bind()
+    transaction = connection.begin()
+    try:
+        op.execute( query )
+        transaction.commit()
+    except Exception as e:
+        transaction.rollback()
+        raise e
+    finally:
+        transaction.close()
+        connection.close()
 
 
 def downgrade() -> None:

@@ -3,7 +3,33 @@
 # pylint: disable=not-callable
 """module file for commom layout."""
 from types import FunctionType
+from entities.login import Login
+from nutricao.components.login.state import LoginState
 import reflex as rx
+
+def logout_item(text: str, icon: str) -> rx.Component:
+    """Create a sidebar item with an icon and text."""
+    return rx.link(
+        rx.hstack(
+            rx.icon(icon),
+            rx.text(text, size="4"),
+            width="100%",
+            padding_x="0.5rem",
+            padding_y="0.75rem",
+            align="center",
+            style={
+                "_hover": {
+                    "bg": rx.color("accent", 4),
+                    "color": rx.color("accent", 11),
+                },
+                "border-radius": "0.5em",
+            },
+            on_click=LoginState.logout,
+        ),
+        underline="none",
+        weight="medium",
+        width="100%",
+    )
 
 
 def sidebar_item(text: str, icon: str, href: str) -> rx.Component:
@@ -49,7 +75,7 @@ def desktop_sidebar() -> rx.Component:
         rx.vstack(
             rx.hstack(
                 rx.image(
-                    src="/logo.jpg",
+                    src="/dietista.png",
                     width="2.25em",
                     height="auto",
                     border_radius="25%",
@@ -65,7 +91,7 @@ def desktop_sidebar() -> rx.Component:
             rx.vstack(
                 rx.vstack(
                     sidebar_item("Settings", "settings", "/#"),
-                    sidebar_item("Log out", "log-out", "/#"),
+                    logout_item("Log out", "log-out"),
                     spacing="1",
                     width="100%",
                 ),
@@ -79,12 +105,12 @@ def desktop_sidebar() -> rx.Component:
                     rx.vstack(
                         rx.box(
                             rx.text(
-                                "My account",
-                                size="3",
-                                weight="bold",
+                                LoginState.user.first_name,
+                                size="2",
+                                weight="medium",
                             ),
                             rx.text(
-                                "user@reflex.dev",
+                                LoginState.user.email,
                                 size="2",
                                 weight="medium",
                             ),
@@ -296,4 +322,20 @@ def public_commom_form(callback:FunctionType) -> rx.Component:
         # top="0px",
         # z_index="5",
         width="100%",
+    )
+
+def private_commom_form(callback:FunctionType) -> rx.Component:
+    return rx.box(
+        desktop_sidebar(),
+        mobile_sidebar(),
+    )
+
+def commom_layout(callback:FunctionType) -> rx.Component:
+    """Create a common layout for the app."""
+    return rx.box(
+        rx.cond(
+            LoginState.is_logged_in,
+            private_commom_form(callback),
+            public_commom_form(callback),
+        ),
     )
