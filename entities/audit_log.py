@@ -12,6 +12,7 @@ from .base import SerialID, InsertDate
 class AuditLog(SerialID, InsertDate):
     """audit data class"""
 
+    __table_args__ = {"schema": "audit"}
     __tablename__ = "audit_log"
     target_data: Mapped[JSON] = mapped_column(JSON, nullable=False, sort_order=10)
     action: Mapped[str] = mapped_column(
@@ -20,4 +21,3 @@ class AuditLog(SerialID, InsertDate):
         nullable=False,
         sort_order=10,
     )
-    __table_args__ = {"schema": "audit"}

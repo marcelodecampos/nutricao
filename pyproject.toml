@@ -20,7 +20,8 @@ dependencies = [
     "psycopg (>=3.2.6,<4.0.0)",
     "reflex-icon-library (>=1.4.1,<2.0.0)",
     "faker (>=37.1.0,<38.0.0)",
-    "uvicorn (>=0.34.2,<0.35.0)"
+    "uvicorn (>=0.34.2,<0.35.0)",
+    "asyncpg (>=0.30.0,<0.31.0)"
 ]
 
 

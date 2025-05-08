@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Entity modules"""
 
-from .base import Base, SerialID, InsertUpdateDate, Name, UniqName, SimpleTable
+from .base import Base, SerialID, InsertUpdateDate, Name, UniqName, SimpleTable, IsValid
 from .person import (
     ContactDocument,
     Gender,
@@ -16,14 +16,17 @@ from .person import (
 )
 from .places import Country, State, City
 from .food import Food, FoodGroup, FoodComponent, FoodComposition
-from .login import Login
+from .login import Login, LastUsedPasswords, LoginAudit
 from .audit_log import AuditLog
+from .access import Role, Permission, Resource
+from .system import Menu
 
 
 __all__ = [
     "Base",
     "SerialID",
     "InsertUpdateDate",
+    "IsValid",
     "Name",
     "UniqName",
     "SimpleTable",
@@ -45,6 +48,12 @@ __all__ = [
     "FoodComposition",
     "UserContactDocument",
     "AuditLog",
+    "Role",
+    "Permission",
+    "Resource",
+    "LastUsedPasswords",
+    "LoginAudit",
+    "Menu",
 ]
 
 __version__ = "0.0.1"

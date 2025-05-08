@@ -92,7 +92,7 @@ class LoginAudit(InsertDate, Base):
     __table_args__ = (__created_at_key, __pk)
 
 
-class LastUsedPasswords(InsertDate):
+class LastUsedPasswords(InsertDate, Base):
     """class Last Used"""
 
     __tablename__ = "last_used_password"

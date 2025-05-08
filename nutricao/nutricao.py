@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=not-callable
 """Welcome to Reflex! This file outlines the steps to create a basic app."""
+
 import logging
 
 # Configure basic logging
@@ -14,10 +15,9 @@ for handler in sqlalchemy_logger.handlers:
 
 
 import reflex as rx
+
 # pylint: disable=wrong-import-position, wrong-import-order, unused-import, import-outside-toplevel
 from .routes import add_routes
-
-
 
 app = rx.App(
     theme=rx.theme(

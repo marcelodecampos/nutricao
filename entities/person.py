@@ -60,10 +60,20 @@ class Title(Name):
     uk = UniqueConstraint("name", "gender_id")
     __table_args__ = (uk,)
 
+
 class ContDocID(Enum):
-    CPF, PASSPORT, IDENTITY, PIS_PASEP, VOTER_ID, BIRTH_CERTIFICATE, CNPJ, CELL_PHONE, PHONE, EMAIL = range(1, 11)
-
-
+    (
+        CPF,
+        PASSPORT,
+        IDENTITY,
+        PIS_PASEP,
+        VOTER_ID,
+        BIRTH_CERTIFICATE,
+        CNPJ,
+        CELL_PHONE,
+        PHONE,
+        EMAIL,
+    ) = range(1, 11)
 
 
 class ContactDocument(SimpleTable):
@@ -99,7 +109,7 @@ class UserContactDocument(Base):
 
     __tablename__ = "user_contact_document"
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )
     contdoc_id: Mapped[int] = mapped_column(ForeignKey("contact_document.id"), primary_key=True)
@@ -107,7 +117,10 @@ class UserContactDocument(Base):
     is_main: Mapped[bool] = mapped_column(Boolean, server_default="f", default=False)
 
     user: Mapped["User"] = relationship(back_populates="contact_document")
-    contdoc: Mapped[ContactDocument] = relationship(lazy="joined", innerjoin=True,)
+    contdoc: Mapped[ContactDocument] = relationship(
+        lazy="joined",
+        innerjoin=True,
+    )
 
     @validates("name")
     def validate_name(self, key: str, field: str):
@@ -152,7 +165,9 @@ class User(Name):
     )
 
     contact_document: Mapped[Optional[list[UserContactDocument]]] = relationship(
-        back_populates="user", lazy="joined", innerjoin=False,
+        back_populates="user",
+        lazy="joined",
+        innerjoin=False,
     )
 
     def add(self, new_item: UserContactDocument) -> Self:
@@ -166,7 +181,6 @@ class User(Name):
 
     def __str__(self):
         return f"User(type={self.person_type}, birthdate={self.birthdate}, {super().__str__()}"
-
 
     @property
     def email(self) -> str:
@@ -185,7 +199,9 @@ class Person(User):
         "polymorphic_identity": "F",
     }
 
-    id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete='CASCADE'), sort_order=1, primary_key=True)
+    id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), sort_order=1, primary_key=True
+    )
     gender_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("gender.id"), sort_order=5, nullable=True
     )
@@ -236,7 +252,6 @@ class Company(User):
             field = field.zfill(CNPJ_SIZE)
             return field
         raise ValueError("CPF could not be null")
-
 
     @property
     def cnpj(self) -> str:

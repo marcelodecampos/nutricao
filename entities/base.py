@@ -116,16 +116,21 @@ class UniqName(Name):
     __table_args__ = (UniqueConstraint("name"),)
 
 
-class SimpleTable(UniqName):
-    """Abstract class to implement a name on almost every table"""
+class IsValid:
+    """IsValid mixin class"""
 
-    __abstract__ = True
     is_valid: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
         server_default="t",
         sort_order=97,
     )
+
+
+class SimpleTable(IsValid, UniqName):
+    """Abstract class to implement a name on almost every table"""
+
+    __abstract__ = True
 
     def __str__(self):
         return super().__str__() + f", 'isvalid': {self.is_valid}"
