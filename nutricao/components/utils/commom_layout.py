@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=not-callable
 """module file for commom layout."""
-from operator import call
+
 from types import FunctionType
-from entities.login import Login
-from nutricao.components.login.state import LoginState
 import reflex as rx
+from nutricao.components.login.state import LoginState
+
 
 def logout_item(text: str, icon: str) -> rx.Component:
     """Create a sidebar item with an icon and text."""
@@ -70,81 +70,79 @@ def sidebar_items() -> rx.Component:
     )
 
 
-
-def sidebar()->rx.Component:
+def sidebar() -> rx.Component:
     return rx.vstack(
-            rx.hstack(
-                rx.image(
-                    src="/dietista.png",
-                    width="2.25em",
-                    height="auto",
-                    border_radius="25%",
-                ),
-                rx.heading("MinhaNutri", size="4", weight="bold"),
-                align="center",
-                justify="start",
-                padding_x="0.5rem",
+        rx.hstack(
+            rx.image(
+                src="/dietista.png",
+                width="2.25em",
+                height="auto",
+                border_radius="25%",
+            ),
+            rx.heading("MinhaNutri", size="4", weight="bold"),
+            align="center",
+            justify="start",
+            padding_x="0.5rem",
+            width="100%",
+        ),
+        sidebar_items(),
+        rx.spacer(),
+        rx.vstack(
+            rx.vstack(
+                sidebar_item("Settings", "settings", "/settings"),
+                logout_item("Log out", "log-out"),
+                spacing="1",
                 width="100%",
             ),
-            sidebar_items(),
-            rx.spacer(),
-            rx.vstack(
-                rx.vstack(
-                    sidebar_item("Settings", "settings", "/settings"),
-                    logout_item("Log out", "log-out"),
-                    spacing="1",
-                    width="100%",
+            rx.divider(),
+            rx.hstack(
+                rx.icon_button(
+                    rx.icon("user"),
+                    size="3",
+                    radius="full",
                 ),
-                rx.divider(),
-                rx.hstack(
-                    rx.icon_button(
-                        rx.icon("user"),
-                        size="3",
-                        radius="full",
-                    ),
-                    rx.vstack(
-                        rx.box(
-                            rx.text(
-                                LoginState.user.first_name,
-                                size="2",
-                                weight="medium",
-                            ),
-                            rx.text(
-                                LoginState.user.email,
-                                size="2",
-                                weight="medium",
-                            ),
-                            width="100%",
+                rx.vstack(
+                    rx.box(
+                        rx.text(
+                            LoginState.user.first_name,
+                            size="2",
+                            weight="medium",
                         ),
-                        spacing="0",
-                        align="start",
-                        justify="start",
+                        rx.text(
+                            LoginState.user.email,
+                            size="2",
+                            weight="medium",
+                        ),
                         width="100%",
                     ),
-                    padding_x="0.5rem",
-                    align="center",
+                    spacing="0",
+                    align="start",
                     justify="start",
                     width="100%",
                 ),
+                padding_x="0.5rem",
+                align="center",
+                justify="start",
                 width="100%",
-                spacing="5",
             ),
+            width="100%",
             spacing="5",
-            # position="fixed",
-            # left="0px",
-            # top="0px",
-            # z_index="5",
-            padding_x="1em",
-            padding_y="1.5em",
-            align="start",
-            # height="100%",
-            height="650px",
-            width="16em",
-        )
+        ),
+        spacing="5",
+        # position="fixed",
+        # left="0px",
+        # top="0px",
+        # z_index="5",
+        padding_x="1em",
+        padding_y="1.5em",
+        align="start",
+        # height="100%",
+        height="650px",
+        width="16em",
+    )
 
 
-
-def desktop_sidebar(component: rx.Component) -> rx.Component:
+def desktop_sidebar(component: rx.Component = None) -> rx.Component:
     """Create a sidebar profile section."""
     return rx.desktop_only(
         rx.box(
@@ -259,7 +257,7 @@ def navbar_icons_menu_item(text: str, icon: str, url: str) -> rx.Component:
     )
 
 
-def public_commom_form(callback_result:rx.Component) -> rx.Component:
+def public_commom_form(callback_result: rx.Component) -> rx.Component:
     """Create a common form for public pages."""
     return rx.box(
         rx.desktop_only(
@@ -328,17 +326,19 @@ def public_commom_form(callback_result:rx.Component) -> rx.Component:
         width="100%",
     )
 
-def private_commom_form(callback_result:rx.Component) -> rx.Component:
+
+def private_commom_form(callback_result: rx.Component) -> rx.Component:
     return rx.box(
         desktop_sidebar(callback_result),
         mobile_sidebar(),
     )
 
-def commom_layout(callback:FunctionType) -> rx.Component:
+
+def commom_layout(callback: FunctionType) -> rx.Component:
     """Create a common layout for the app."""
-    callback_result=rx.box()
+    callback_result = rx.box()
     if callback is not None:
-        callback_result = rx.box (callback())
+        callback_result = rx.box(callback())
     return rx.box(
         rx.cond(
             LoginState.is_logged_in,

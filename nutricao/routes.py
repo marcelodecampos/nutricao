@@ -15,6 +15,7 @@ def add_routes(app):
     from nutricao.components.signup import signup_form, signup_ok_form
     from nutricao.components.reset_password import reset_password_form, forgot_password_form
     from nutricao.components.utils import commom_layout
+    from nutricao.components.menu import menu_layout
 
     app.add_page(
         commom_layout(None),
@@ -59,11 +60,18 @@ def add_routes(app):
         image="https://reflex.dev/logo.png",
     )
 
-
     app.add_page(
         commom_layout(rx.theme_panel),
         route="/settings",
         title="Recuperar a Senha",
         description="Recuperar a senha",
+        image="https://reflex.dev/logo.png",
+    )
+
+    app.add_page(
+        menu_layout(),
+        route="/test/menu",
+        title="Menu",
+        description="Menu Tests",
         image="https://reflex.dev/logo.png",
     )

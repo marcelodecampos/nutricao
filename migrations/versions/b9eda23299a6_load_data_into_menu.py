@@ -7,6 +7,7 @@ Create Date: 2025-05-08 01:28:41.167628
 """
 
 from typing import Sequence, Union
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 from alembic import op
 from entities import Menu
@@ -142,7 +143,7 @@ def upgrade() -> None:
         )
     )
 
-    menu_person = Menu(name="Cadastro de Pessoa", index=4, parent=mnu_tabela)
+    menu_person = Menu(name="Cadastro de Pessoa", index=1)
     session.add(menu_person)
     session.add(Menu(name="Física", index=1, parent=menu_person, url="/user/person", icon="user"))
     session.add(
@@ -155,25 +156,33 @@ def upgrade() -> None:
 
     query = """
         create or replace view vw_menu as (
-        WITH RECURSIVE menu_hierarchy as (
-            select
-                id, name, url, icon, parent_id, 1 as level, index
-            from
-                menu
-            where
-                is_valid is true and parent_id is null
-            union all
-            select
-                menu.id, menu.name, menu.url, menu.icon, menu.parent_id, mh.level+1 as level, menu.index
-            from
-                menu inner join menu_hierarchy mh on mh.id = menu.parent_id
-            where
-                menu.is_valid is true
-        )
-        select
-            id, name, url, icon, parent_id, level, index
-        from menu_hierarchy
-        order by id
+            WITH RECURSIVE menu_cte AS (
+                SELECT
+                    id,
+                    name,
+                    url,
+                    icon,
+                    index,
+                    parent_id,
+                    ARRAY[id] AS path
+                FROM menu
+                WHERE parent_id IS NULL and is_valid is true
+                UNION ALL
+                SELECT
+                    m.id,
+                    m.name,
+                    m.url,
+                    m.icon,
+                    m.index,
+                    m.parent_id,
+                    mc.path || m.id
+                FROM menu m
+                JOIN menu_cte mc ON m.parent_id = mc.id
+                where m.is_valid is true
+            )
+            SELECT *
+            FROM menu_cte
+            ORDER BY path, index
         )"""
     op.execute(query)
 
@@ -182,3 +191,35 @@ def downgrade() -> None:
     """Downgrade schema."""
     op.execute("TRUNCATE TABLE menu RESTART IDENTITY;")
     op.execute("DROP VIEW IF EXISTS vw_menu")
+
+
+def get_session():
+    """get session for test purposes"""
+
+    url = "postgresql+psycopg://postgres:curiosidade@db.local:5432/minhanutri?application_name=alembic"
+    engine = create_engine(url)
+    session = Session(engine)
+    return session
+
+
+def get_menu(session, parent=None, tabs=0) -> dict:
+    """get menu"""
+    query = select(Menu).where(Menu.parent == parent)
+    stmt = session.execute(query)
+    tree = dict()
+    for menu in stmt.scalars():
+        print(menu)
+        menu_key = menu.name
+        tree[menu_key] = {"menu": menu}
+        submenus: dict = get_menu(session, menu, tabs + 1)
+        if submenus:
+            tree[menu_key]["submenu"] = submenus
+    return tree
+
+
+if __name__ == "__main__":
+    from pprint import pprint
+
+    with get_session() as db:
+        menus = get_menu(db)
+    pprint(menus, indent=1, width=148)

@@ -48,7 +48,8 @@ class Menu(IsValid, Base):
     parent = relationship("Menu", remote_side=[id], foreign_keys=[parent_id])
 
     def __str__(self):
-        return f"User(id={self.id})"
+        url = self.url if self.url else ""
+        return f"{self.id:03d} - {self.name:<32} {url:<32} "
 
     def __eq__(self, other: any):
         if not other:
