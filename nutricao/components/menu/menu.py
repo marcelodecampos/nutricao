@@ -6,43 +6,9 @@
 from datetime import datetime
 from types import FunctionType
 import reflex as rx
-from sqlalchemy import select
+from sqlalchemy import select, text
+from treelib import Node, Tree
 from entities import Menu
-
-
-menu_tree = []
-
-
-def get_menu(session, parent=None, tabs=0):
-    """get menu"""
-    query = select(Menu).where(Menu.parent == parent).order_by(Menu.index)
-    stmt = session.execute(query)
-    for menu in stmt.scalars():
-        menu_tree.append(menu)
-        get_menu(session, menu, tabs + 1)
-
-
-def load_menu() -> list:
-    """on load event"""
-    with rx.session() as session:
-        if not menu_tree:
-            get_menu(session)
-    return menu_tree
-
-
-def group(menu: Menu):
-    """group"""
-    return rx.el.li(
-        rx.link(
-            rx.el.h5(
-                menu.name,
-                class_name="font-smbold text-[0.875rem] text-slate-12 hover:text-violet-9 leading-5 tracking-[-0.01313rem] transition-color",
-            ),
-            underline="none",
-            class_name="py-3",
-        ),
-        class_name="flex flex-col items-start ml-0 w-full",
-    )
 
 
 class MenuState(rx.ComponentState):
@@ -51,77 +17,105 @@ class MenuState(rx.ComponentState):
     selected: bool = False
 
     @classmethod
-    def normalize_menu_structure(cls, entities: list[list]):
-        from pprint import pprint
-
-        normalized_menu = {}
-
-        pprint(f"{datetime.now()}")
-        pprint(entities)
-        pass
+    def sub_menu_content(cls):
+        rx.menu.sub(
+            rx.menu.sub_trigger("Tabelas de Pessoa"),
+            rx.menu.sub_content(
+                rx.menu.item("Escolaridade"),
+                rx.menu.item("Gênero"),
+                rx.menu.item("Estado Civil"),
+                rx.menu.item("Pronome de Tratamento"),
+                rx.menu.item("Tipo de Documento"),
+                rx.menu.item("Meio de Contato"),
+            ),
+        )
 
     @classmethod
-    def load_menu(cls) -> list:
+    def create_menu_tree(cls, menu_tree, n_index: int = 0):
+        """create all menus"""
+        submenu_compoment_list: list = []
+        try:
+            if not menu_tree[n_index].has_child:
+                while not menu_tree[n_index].has_child:
+                    submenu_compoment_list.append(rx.menu.item("Pais"))
+                return submenu_compoment_list
+            submenu_compoment_list = cls.create_menu_tree(menu_tree, menu_tree[n_index + 1])
+        except KeyError:
+            pass
+        return submenu_compoment_list
+
+    @classmethod
+    def load_menu(cls) -> Tree:
         """get all menus from database without parent"""
-        entities: list[list] = []
+        menu_tree: Tree = Tree()
+        menu_tree.create_node("Root", "root")
         with rx.session() as session:
-            query = select(Menu).order_by(Menu.index)
-            records: list[Menu] = session.execute(query).scalars()
-            for item in records:
-                entities.append((item.id, item.name, item.icon, item.url, item.parent_id))
-        cls.normalize_menu_structure(entities)
-        return entities
+            query = text("SELECT * FROM vw_menu")
+            stmt = session.exec(query)
+            records: list = stmt.all()
+            for row in records:
+                menu_tree.create_node(row[1], row[0], row[5] or "root", row)
+            session.commit()
+        return cls.create_menu(menu_tree, menu_tree.children("root"))
 
     @classmethod
-    def menu_component(cls, text: str) -> rx.Component:
+    def create_sub_menu_item(cls, menu_data: list):
+        """return reflex sub menu item"""
+        icon = None
+        if menu_data[3]:
+            icon = rx.icon(menu_data[3], size=15, stroke_width=1)
+        text_element = rx.text(menu_data[1])
+        return rx.menu.item(icon, text_element)
+
+    @classmethod
+    def create_sub_menu(cls, menu_data: list, menu_list: list):
+        """return reflex sub menu"""
+        return rx.menu.sub(
+            rx.menu.sub_trigger(menu_data[1]),
+            rx.menu.sub_content(menu_list),
+        )
+
+    @classmethod
+    def create_menu(cls, menu_tree: Tree, nodes: list[Node] | None = None, level: int = 0) -> list:
+        if not nodes:
+            nodes = menu_tree.children("root")
+        menu_child_list: list | None = None
+        menu_list: list = []
+        for node_obj in nodes:
+            if not node_obj.is_leaf():
+                menu_child_list = cls.create_menu(
+                    menu_tree, menu_tree.children(node_obj.identifier), level + 1
+                )
+            if node_obj.is_leaf():
+                str_menu_type = cls.create_sub_menu_item(node_obj.data)
+                menu_child_list = None
+            else:
+                str_menu_type = cls.create_sub_menu(node_obj.data, menu_child_list)
+            menu_list.append(str_menu_type)
+        return menu_list
+
+    @classmethod
+    def menu_component_root(cls, menu_tree) -> rx.Component:
         """main class method that return components to refles"""
-        return rx.menu.root(
+        rx_menu_item: rx.DropdownMenuRoot = rx.menu.root(
             rx.menu.trigger(
                 rx.button(
-                    rx.icon("wrench", size=15, stroke_width=1),
-                    text,
+                    rx.icon("menu"),
                 ),
             ),
-            rx.menu.content(
-                rx.menu.sub(
-                    rx.menu.sub_trigger("Tabelas de Pessoa"),
-                    rx.menu.sub_content(
-                        rx.menu.item("Escolaridade"),
-                        rx.menu.item("Gênero"),
-                        rx.menu.item("Estado Civil"),
-                        rx.menu.item("Pronome de Tratamento"),
-                        rx.menu.item("Tipo de Documento"),
-                        rx.menu.item("Meio de Contato"),
-                    ),
-                ),
-                rx.menu.sub(
-                    rx.menu.sub_trigger("Tabelas de Localidade"),
-                    rx.menu.sub_content(
-                        rx.menu.item("Pais"),
-                        rx.menu.item("Estado"),
-                        rx.menu.item("Cidade"),
-                    ),
-                ),
-                rx.menu.sub(
-                    rx.menu.sub_trigger("Tabelas de Nutrição"),
-                    rx.menu.sub_content(
-                        rx.menu.item("Alimentos"),
-                        rx.menu.item("Grupo de Alimentos"),
-                        rx.menu.item("Composição Alimentar"),
-                    ),
-                ),
-            ),
+            rx.menu.content(menu_tree),
             modal=False,
         )
+        return rx_menu_item
 
     @classmethod
     def get_component(cls, **props) -> rx.Component:
         """main class method that return components to reflex"""
-        menus: list[list] = cls.load_menu()
+        root = cls.menu_component_root(props["menu_tree"])
         return rx.box(
             rx.text(f"{datetime.now()}Debugging is so hard here!!!"),
             rx.vstack(
-                [cls.menu_component(item[1]) for item in menus],
+                root,
                 spacing="0",
                 padding="0",
             ),
@@ -134,42 +128,7 @@ class MenuState(rx.ComponentState):
         )
 
 
-def menu_sidebar_item(
-    header: str,
-    value: str,
-    content: str | rx.Component | None = None,
-    url: str | None = None,
-) -> rx.Component:
-    if not url:
-        url = "#"
-    return rx.box(
-        rx.link(
-            rx.hstack(
-                rx.text(
-                    header,
-                    padding="0",
-                    spacing="0",
-                ),
-                rx.icon(
-                    "arrow-right",
-                    padding="0",
-                    spacing="0",
-                    stroke_width=1,
-                    size=20,
-                ),
-                align="center",
-                width="100%",
-                padding="0",
-                spacing="0",
-            ),
-            href=url,
-            width="100%",
-            padding="0",
-            spacing="0",
-        ),
-    )
-
-
 def menu_layout(callback: FunctionType | None = None) -> rx.Component:
     """Create a common layout for the app."""
-    return MenuState.create()
+    menu_tree: Tree = MenuState.load_menu()
+    return MenuState.create(menu_tree=menu_tree)

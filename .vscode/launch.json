@@ -5,15 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Poetry Debug",
-            "type": "debugpy",
+            "name": "reflex",
+            "type": "python",
             "request": "launch",
             "module": "reflex",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "run"
+                "run",
+                "--env=dev",
+                "--loglevel=info",
             ],
             "env": {
                 "ENV_FOR_DEMO": "dev",

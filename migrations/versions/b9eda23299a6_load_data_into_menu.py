@@ -7,7 +7,7 @@ Create Date: 2025-05-08 01:28:41.167628
 """
 
 from typing import Sequence, Union
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 from alembic import op
 from entities import Menu
@@ -155,35 +155,38 @@ def upgrade() -> None:
     session.commit()
 
     query = """
-        create or replace view vw_menu as (
+            CREATE OR REPLACE VIEW public.vw_menu
+            AS
             WITH RECURSIVE menu_cte AS (
-                SELECT
-                    id,
-                    name,
-                    url,
-                    icon,
-                    index,
-                    parent_id,
-                    ARRAY[id] AS path
-                FROM menu
-                WHERE parent_id IS NULL and is_valid is true
-                UNION ALL
-                SELECT
-                    m.id,
-                    m.name,
-                    m.url,
-                    m.icon,
-                    m.index,
-                    m.parent_id,
-                    mc.path || m.id
-                FROM menu m
-                JOIN menu_cte mc ON m.parent_id = mc.id
-                where m.is_valid is true
-            )
+                    SELECT menu.id,
+                        menu.name,
+                        menu.url,
+                        menu.icon,
+                        menu.index,
+                        menu.parent_id,
+                        coalesce ((select true from menu child where child.parent_id = menu.id limit 1), false) as has_child,
+                        ARRAY[menu.id] AS path,
+                        1 as level
+                    FROM menu
+                    WHERE menu.parent_id IS NULL AND menu.is_valid IS TRUE
+                    UNION ALL
+                    SELECT m.id,
+                        m.name,
+                        m.url,
+                        m.icon,
+                        m.index,
+                        m.parent_id,
+                        coalesce ((select true from menu child where child.parent_id = m.id limit 1), false) as has_child,
+                        mc.path || m.id,
+                        mc.level + 1 as level
+                    FROM menu m
+                        JOIN menu_cte mc ON m.parent_id = mc.id
+                    WHERE m.is_valid IS TRUE
+                    )
             SELECT *
             FROM menu_cte
-            ORDER BY path, index
-        )"""
+            ORDER BY path, index;
+        """
     op.execute(query)
 
 
@@ -204,16 +207,17 @@ def get_session():
 
 def get_menu(session, parent=None, tabs=0) -> dict:
     """get menu"""
-    query = select(Menu).where(Menu.parent == parent)
+    query = text("SELECT * FROM vw_menu")
     stmt = session.execute(query)
-    tree = dict()
-    for menu in stmt.scalars():
-        print(menu)
-        menu_key = menu.name
-        tree[menu_key] = {"menu": menu}
-        submenus: dict = get_menu(session, menu, tabs + 1)
-        if submenus:
-            tree[menu_key]["submenu"] = submenus
+    cursor_description = stmt.cursor.description
+    menus = stmt.fetchall()
+    tree = []
+    for menu in menus:
+        row = {}
+        for name, value in zip((d[0] for d in cursor_description), menu):
+            row[name] = value
+        tree.append(row)
+    pprint(tree)
     return tree
 
 
@@ -221,5 +225,5 @@ if __name__ == "__main__":
     from pprint import pprint
 
     with get_session() as db:
-        menus = get_menu(db)
-    pprint(menus, indent=1, width=148)
+        main_menus = get_menu(db)
+    pprint(main_menus, indent=1, width=148)
