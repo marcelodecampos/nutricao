@@ -16,7 +16,7 @@ import reflex as rx
 def get_session():
     """get session for test purposes"""
 
-    url = "postgresql+psycopg://postgres:curiosidade@db.local:5432/minhanutri?application_name=alembic"
+    url = "postgresql+psycopg://postgres:curiosidade@db.local:5432/minhanutri?application_name=menu_test"
     engine = create_engine(url)
     session = Session(engine)
     return session

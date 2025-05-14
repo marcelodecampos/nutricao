@@ -408,10 +408,12 @@ def upgrade() -> None:
     load_contact_document(session)
     load_city(session)
     load_person(session)
+    add_master_login(session)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
+    op.execute("TRUNCATE TABLE login CASCADE")
     op.execute("TRUNCATE TABLE food CASCADE")
     op.execute("TRUNCATE TABLE food_group CASCADE")
     op.execute("TRUNCATE TABLE food_component CASCADE")

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Entity modules"""
 
+from .enums import ContDocID, PersonType
 from .base import Base, SerialID, InsertUpdateDate, Name, UniqName, SimpleTable, IsValid
 from .person import (
     ContactDocument,
@@ -23,6 +24,8 @@ from .system import Menu
 
 
 __all__ = [
+    "ContDocID",
+    "PersonType",
     "Base",
     "SerialID",
     "InsertUpdateDate",

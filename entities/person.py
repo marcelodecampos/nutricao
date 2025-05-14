@@ -3,7 +3,6 @@
 # pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument)
 """Module File"""
 
-from enum import Enum
 from re import sub as regex_substitute
 from typing import Optional, Self
 from datetime import date
@@ -19,13 +18,15 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
 
-from .base import Base, Name, SimpleTable, DEFAULT_NAME_FIELD_SIZE
+from . import Base, Name, SimpleTable, ContDocID, PersonType
+
 
 TYPE_PERSON_CHECK_CONSTRAINT = CheckConstraint("person_type IN ('F', 'J', NULL)")
 CONTDOC_CHECK_CONSTRAINT = CheckConstraint("contdoc_type IN ('C', 'D')")
 CPF_SIZE = 11
 CNPJ_SIZE = 14
 STOP_CHARS = "[.-/_]"
+DEFAULT_NAME_FIELD_SIZE = 256
 
 
 class MaritalStatus(SimpleTable):
@@ -59,21 +60,6 @@ class Title(Name):
 
     uk = UniqueConstraint("name", "gender_id")
     __table_args__ = (uk,)
-
-
-class ContDocID(Enum):
-    (
-        CPF,
-        PASSPORT,
-        IDENTITY,
-        PIS_PASEP,
-        VOTER_ID,
-        BIRTH_CERTIFICATE,
-        CNPJ,
-        CELL_PHONE,
-        PHONE,
-        EMAIL,
-    ) = range(1, 11)
 
 
 class ContactDocument(SimpleTable):
@@ -130,7 +116,10 @@ class UserContactDocument(Base):
         return field
 
     def __str__(self):
-        return f"User({self.user}, DocumentType({self.contdoc}), Document({self.name}), {super().__str__()}"
+        return (
+            f"User({self.user}, DocumentType({self.contdoc}), "
+            f"Document({self.name}), {super().__str__()}"
+        )
 
 
 class User(Name):
@@ -139,7 +128,7 @@ class User(Name):
     __tablename__ = "users"
     __table_args__ = {
         "comment": (
-            "This table uses plural in order to do not"
+            "This table uses plural in order to do not "
             "conflict with user reserved word in some databases."
         )
     }
@@ -196,7 +185,7 @@ class Person(User):
 
     __tablename__ = "person"
     __mapper_args__ = {
-        "polymorphic_identity": "F",
+        "polymorphic_identity": PersonType.PERSON.value,
     }
 
     id: Mapped[int] = mapped_column(
@@ -239,7 +228,7 @@ class Company(User):
 
     __tablename__ = "company"
     __mapper_args__ = {
-        "polymorphic_identity": "J",
+        "polymorphic_identity": PersonType.COMPANY.value,
     }
 
     id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True, sort_order=3)
