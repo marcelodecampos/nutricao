@@ -4,12 +4,15 @@
 """module file"""
 
 import json
+from contextlib import suppress
 from datetime import datetime
 from typing import Optional
 from functools import total_ordering
 from sqlalchemy import DateTime, Integer, String, Boolean, BigInteger, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
+from sqlalchemy.orm.exc import DetachedInstanceError
 from sqlalchemy.sql import func
+from typing import Any
 
 from utils.logger import get_logger
 
@@ -30,6 +33,44 @@ class Base(DeclarativeBase):
     #     for key, value in kwargs.items():
     #         if hasattr(self, key):
     #             setattr(self, key, value)
+
+    def dict(self, **kwargs):
+        """Convert the object to a dictionary.
+
+        Args:
+            kwargs: Ignored but needed for compatibility.
+
+        Returns:
+            The object as a dictionary.
+        """
+        base_fields = {name: getattr(self, name) for name in self.__fields__}
+        relationships = {}
+        # SQLModel relationships do not appear in __fields__, but should be included if present.
+        for name in self.__sqlmodel_relationships__:
+            with suppress(
+                DetachedInstanceError  # This happens when the relationship was never loaded and the session is closed.
+            ):
+                relationships[name] = self._dict_recursive(getattr(self, name))
+        return {
+            **base_fields,
+            **relationships,
+        }
+
+    @classmethod
+    def _dict_recursive(cls, value: Any):
+        """Recursively serialize the relationship object(s).
+
+        Args:
+            value: The value to serialize.
+
+        Returns:
+            The serialized value.
+        """
+        if hasattr(value, "dict"):
+            return value.dict()
+        elif isinstance(value, list):
+            return [cls._dict_recursive(item) for item in value]
+        return value
 
 
 @total_ordering

@@ -6,15 +6,15 @@ This module contains the state of the application,
 including user information and other relevant data."""
 
 import logging
-from os import name
-import bcrypt
 from dataclasses import dataclass
+import bcrypt
 import reflex as rx
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from entities import UserContactDocument, Login
 
 logger = logging.getLogger("minhanutri.nutricao")
+
 
 @dataclass
 class AppUser:
@@ -30,62 +30,70 @@ class LoginState(rx.State):
     """The app state."""
 
     # Define the state variables
-    user: AppUser = None
+    user: AppUser | None = None
     email: str = None
-    password: str = None
-    form_data: dict = None
-
 
     @rx.var
-    def is_logged_in(self) -> bool:
+    async def is_logged_in(self) -> bool:
         """Check if the user is logged in."""
-        logger.debug("is_logged_in")
+        if self.user:
+            str_name = self.user.name
+        else:
+            str_name = "NONE"
+        logger.debug(f"self.user is {str_name}")
         return self.user is not None
 
-
-    def find_login_by_document(self, document: str, password: str) -> Login:
+    @staticmethod
+    async def find_login_by_document(form_data: dict) -> Login:
         """Find a user by their document."""
         # This is a placeholder implementation. Replace with actual logic to find a user by their document.
         logger.debug("find_login_by_document")
         # Print out the handlers
-        with rx.session() as db_session:
-            print (type(db_session))
-            print (db_session)
+        async with rx.asession() as db_session:
             query = (
                 select(Login)
                 .select_from(UserContactDocument)
                 .join(Login, Login.user_id == UserContactDocument.user_id)
-                .where(UserContactDocument.name == document)
+                .where(UserContactDocument.name == form_data["login_id"])
             )
             try:
-                resultset = db_session.exec(query).one()
+                stmt = await db_session.exec(query)
+                resultset = stmt.one()
                 login_entity = resultset[0]
-                if not bcrypt.checkpw(password.encode(), login_entity.password.encode()):
+                await db_session.commit()
+                if not bcrypt.checkpw(
+                    form_data["password"].encode(), login_entity.password.encode()
+                ):
                     logger.debug("bcrypt failed")
                     return None
                 return login_entity
             except NoResultFound:
                 logger.debug("NoResultFound")
+                db_session.rollback()
                 return None
 
-    def logout(self) -> None:
+    @rx.event(background=True)
+    async def logout(self):
         """Logout the user."""
         logger.debug("Logout User")
-        self.user = None
-        return rx.redirect("/")
+        async with self:
+            self.user = None
+        yield rx.redirect("/")
 
-    @rx.event
-    def handle_submit(self, form_data: dict):
+    @rx.event(background=True)
+    async def handle_submit(self, form_data: dict):
         """Handle the form submission."""
         # This is a placeholder implementation. Replace with actual logic to handle form submission.
         logger.debug("handle_submit")
-        self.form_data = form_data
-        login_entity:Login = self.find_login_by_document(form_data["login_id"], form_data["password"])
-        if not login_entity:
-            yield rx.toast.error("Usuário ou senha inválidos.")
-            return
-        self.user = AppUser(login_id = login_entity.user_id,
-                            name = login_entity.user.name,
-                            email = login_entity.user.email,
-                            first_name =login_entity.user.first_name)
-        return rx.redirect("/")
+        async with self:
+            login_entity: Login = await self.find_login_by_document(form_data)
+            if login_entity:
+                self.user = AppUser(
+                    login_id=login_entity.user_id,
+                    name=login_entity.user.name,
+                    email=login_entity.user.email,
+                    first_name=login_entity.user.first_name,
+                )
+                yield rx.redirect("/")
+            else:
+                yield rx.toast.error("Usuário ou senha inválidos.")
