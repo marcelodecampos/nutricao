@@ -1,16 +1,26 @@
 # python3
 # -*- coding: utf-8 -*-
-# pylint: disable=too-few-public-methods, too-many-arguments, too-many-locals, too-many-statements, line-too-long, inherit-non-class, broad-exception-caught
+# pylint: disable=(too-few-public-methods, too-many-arguments, too-many-locals, too-many-statements, line-too-long, inherit-non-class, broad-exception-caught,logging-fstring-interpolation,)
 import json
-
+import logging
 import reflex as rx
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
-from entities import AuditLog, Login, UserContactDocument, Person, ContactDocument
+from entities import AuditLog, Login, UserContactDocument, Person, ContactDocument, ContDocID
+
+
+VERIFY_EMAIL_MSG = "Por favor, verifique o seu e-mail. Os e-mails não são iguais."
+VERIFY_PASSWORD_MSG = "Por favor, verifique a sua senha. As senhas não são iguais."
+EXISTENT_EMAIL_MSG = "O e-mail informado já está cadastrado em nosso sistema"
+EXISTENT_CPF_MSG = "O CPF informado já está cadastrado em nosso sistema"
+
+logger = logging.getLogger()
 
 
 class SignupFormState(rx.State):
     """State for the signup form."""
+
+    cpf: str = ""
 
     password: str = ""
     confirm_password: str = ""
@@ -18,120 +28,136 @@ class SignupFormState(rx.State):
     email: str = ""
     confirm_email: str = ""
 
-    is_loading: bool = False
-
-    def _store_audit(self, db_session, json_data: str) -> bool:
+    async def _store_audit(self, db_session, json_data: str):
         """Store audit log in the database."""
         # Create a new AuditLog entry
         try:
             audit_log = AuditLog(action="signup", target_data=json_data)
-            db_session.add(audit_log)
-            return True
-        except:
-            return False
+            await db_session.add(audit_log)
+            logger.debug("Storing audit from db_session")
+        except Exception as e:
+            err_msg = "Erro ao gravar dados de auditoria"
+            logger.error(err_msg)
+            raise ValueError(err_msg, e) from e
 
-    def _exists_document(self, db_session, document: str) -> bool:
+    async def _exists_document(self, db_session, item: tuple) -> bool:
         """Check if the document already exists."""
-        query = select(UserContactDocument).where(UserContactDocument.name == document)
+        query = select(UserContactDocument).where(UserContactDocument.name == item[0])
         try:
-            db_session.exec(query).one()
-            return True
+            resultset = await db_session.exec(query)
+            resultset.one()
+            logger.warning(f"Document {item[0]} already exists on database")
+            raise ValueError(item[1])
         except NoResultFound:
             return False
 
-    def _exists_email_or_cpf_on_database(self, db_session, form_data: dict) -> bool:
+    async def exists_document_on_database(self, db_session, form_data: dict) -> bool:
         """Verify if the fields are valid."""
         # Check if the fields are valid (e.g., not empty, valid format)
         # You can implement your own validation logic here
-        if self._exists_document(
-            db_session,
-            form_data["cpf"],
-        ) or self._exists_document(
-            db_session,
-            form_data["login_id"],
-        ):
-            return True
-        return False
+        verify_list: list = (
+            (form_data["cpf"], EXISTENT_CPF_MSG),
+            (form_data["login_id"], EXISTENT_EMAIL_MSG),
+        )
+        for item in verify_list:
+            self._exists_document(db_session, item)
 
-    def _verify_password(self, form_data: dict) -> bool:
+    def _verify_password(self, form_data: dict):
         """Verify if the password and confirm password match."""
-        return form_data["password"] == form_data["confirmPassword"]
+        if form_data["password"] != form_data["confirmPassword"]:
+            logger.debug(VERIFY_PASSWORD_MSG)
+            raise ValueError(VERIFY_PASSWORD_MSG)
 
-    def _verify_email(self, form_data: dict) -> bool:
+    @staticmethod
+    def _verify_email(login_id, confirm_email) -> bool:
         """Verify if the email and confirm email match."""
-        return form_data["login_id"] == form_data["confirmEmail"]
+        if login_id != confirm_email:
+            logger.debug(VERIFY_EMAIL_MSG)
+            raise ValueError(VERIFY_EMAIL_MSG)
 
-    def _add_new_user(self, db_session, form_data: dict) -> bool:
+    async def _add_new_user(self, db_session, form_data: dict):
         """Add a new user to the database."""
         # Create a new user and add it to the database
         # You can implement your own logic to create a new user here
         try:
-            new_person = Person(
-                name=form_data["name"],
+            doctype_cpf = await db_session.get(ContactDocument, ContDocID.CPF)
+            doctype_email = await db_session.get(ContactDocument, ContDocID.EMAIL)
+            doc_cpf = UserContactDocument(contdoc=doctype_cpf, name=form_data["cpf"], is_main=True)
+            doc_email = UserContactDocument(
+                contdoc=doctype_email, name=form_data["login_id"], is_main=True
             )
-            new_person.add(
-                UserContactDocument(
-                    contdoc=db_session.get(ContactDocument, 1),
-                    name=form_data["cpf"],
-                    is_main=True,
-                )
-            )
-            new_person.add(
-                UserContactDocument(
-                    contdoc=db_session.get(ContactDocument, 10),
-                    name=form_data["login_id"],
-                    is_main=True,
-                )
-            )
+            new_person = Person(name=form_data["name"])
+            new_person.add(doc_cpf)
+            new_person.add(doc_email)
             db_session.add(new_person)
-            db_session.add(Login(user=new_person, password=form_data["password"]))
-            return True
-        except Exception:
-            return False
+            login = Login(user=new_person, password=form_data["password"])
+            await db_session.add_all((new_person, login))
+        except Exception as e:
+            err_msg = "Erro ao efetuar o seu novo cadastro"
+            logger.error(err_msg)
+            raise ValueError(err_msg, e) from e
 
     @rx.event
-    def on_submit(self, form_data: dict) -> rx.event.EventSpec:
+    async def on_submit(self, form_data: dict):
         """Handle form submission."""
         # Handle form submission logic here
         # For example, you can access the form data using event.target.elements
         # and perform any necessary actions (e.g., sending data to a server)
-        if not self._verify_password(form_data):
-            return rx.toast.error("As senhas não coincidem.")
-        if not self._verify_email(form_data):
-            return rx.toast.error("Os e-mails não coincidem.")
-        with rx.session() as db_session:
-            # Create a new AuditLog entry
-            if not self._exists_email_or_cpf_on_database(db_session, form_data):
-                if self._add_new_user(db_session, form_data):
-                    if self._store_audit(db_session, json.dumps(form_data)):
-                        self.is_loading = True
-                        db_session.commit()
-                        return rx.redirect("/signup_ok")
-                    else:
-                        return rx.toast.error("Erro ao armazenar o log de auditoria.")
-                else:
-                    return rx.toast.error("Erro ao criar o usuário.")
-            else:
-                return rx.toast.error("CPF ou e-mail já cadastrado.")
+        async with rx.asession() as db_session:
+            try:
+                self._verify_password(form_data)
+                self._verify_email(form_data["login_id"], form_data["confirmEmail"])
+                # Create a new AuditLog entry
+                await self.exists_document_on_database(db_session, form_data)
+                await self._add_new_user(db_session, form_data)
+                await self._store_audit(db_session, json.dumps(form_data))
+                await db_session.commit()
+                logger.debug("Signup OK")
+                yield rx.redirect("/signup_ok")
+            except ValueError as err:
+                await db_session.rollback()
+                logger.error("Signup OK")
+                yield rx.toast.error(str(err))
 
     @rx.event
-    def verify_password(self) -> rx.event.EventSpec | None:
+    async def verify_password(self):
         """Verify if the password and confirm password match."""
         if self.password != self.confirm_password:
-            return rx.toast.error("As senhas não coincidem.")
+            logger.debug(VERIFY_PASSWORD_MSG)
+            yield rx.toast.error(VERIFY_PASSWORD_MSG)
 
     @rx.event
-    def verify_email(self) -> rx.event.EventSpec | None:
+    async def verify_email(self):
         """Verify if the email and confirm email match."""
         if self.email != self.confirm_email:
-            return rx.toast.error("Os e-mails não coincidem.")
+            logger.debug(VERIFY_EMAIL_MSG)
+            yield rx.toast.error(VERIFY_EMAIL_MSG)
 
-    def on_load(self):
+    @rx.event
+    async def on_load(self):
         """Handle form load."""
+        self.cpf: str = ""
         self.password: str = ""
         self.confirm_password: str = ""
 
         self.email: str = ""
         self.confirm_email: str = ""
 
-        self.is_loading: bool = False
+    @rx.event
+    async def on_blur_cpf(self):
+        """handle on blur event on cpf"""
+        logger.debug(f"Verifying ID: {self.cpf}")
+        try:
+            async with rx.asession() as db_session:
+                await self._exists_document(db_session, (self.cpf, EXISTENT_CPF_MSG))
+        except ValueError as e:
+            yield rx.toast.error(str(e))
+
+    @rx.event
+    async def on_blur_email(self):
+        """handle on blur event on confirm email field"""
+        logger.debug(f"Verifying e-mail: {self.email} and {self.confirm_email}")
+        try:
+            self._verify_email(self.email, self.confirm_email)
+        except ValueError as e:
+            yield rx.toast.error(str(e))

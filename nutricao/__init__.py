@@ -46,8 +46,8 @@ def configure_logger():
     stream_handler.setFormatter(CustomFormatter())
 
     logger.addHandler(stream_handler)
-
     logging.getLogger("watchfiles.main").setLevel(logging.WARNING)
+    logger.debug("The logger is configured")
 
 
 configure_logger()
