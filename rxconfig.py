@@ -20,7 +20,7 @@ url_object = URL.create(
 
 config = rx.Config(
     app_name="nutricao",
-    # db_url=url_object,
+    db_url=url_object,
     async_db_url=url_object,
     redis_url="redis://db.local:6379/0[&health_check_interval=10&retry_on_timeout=False]",
     frontend_port=3000,

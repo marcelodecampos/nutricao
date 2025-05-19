@@ -1,4 +1,10 @@
+#!  python3
+# -*- coding: utf-8 -*-
+# pylint: disable=not-callable
+"""utils logger module"""
+
 import logging
+import traceback
 from rich.logging import RichHandler
 from uvicorn.logging import DefaultFormatter
 
@@ -21,3 +27,9 @@ def get_logger(name: str = None):
         logger.addHandler(handle)
     # add ch to logger
     return logger
+
+
+def get_trace_back_from_exception(logger, exception: Exception):
+    tb = traceback.extract_tb(exception.__traceback__)
+    for frame in tb:
+        logger.debug(f"Error on line {frame.lineno} in {frame.filename}")

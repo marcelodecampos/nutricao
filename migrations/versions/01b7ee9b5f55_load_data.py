@@ -99,7 +99,7 @@ def load_contact_document(session) -> None:
         ),
         ContactDocument(
             name="Celular",
-            allow_login=True,
+            allow_login=False,
             mask="(99) 99999-9999",
             contdoc_type="C",
             sub_regex="[^0-9]",
@@ -112,6 +112,7 @@ def load_contact_document(session) -> None:
         ),
         ContactDocument(
             name="e-mail",
+            allow_login=True,
             contdoc_type="C",
         ),
     )

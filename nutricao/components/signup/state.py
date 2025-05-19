@@ -5,8 +5,9 @@ import json
 import logging
 import reflex as rx
 from sqlalchemy import select
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from entities import AuditLog, Login, UserContactDocument, Person, ContactDocument, ContDocID
+from utils import get_trace_back_from_exception
 
 
 VERIFY_EMAIL_MSG = "Por favor, verifique o seu e-mail. Os e-mails não são iguais."
@@ -33,7 +34,7 @@ class SignupFormState(rx.State):
         # Create a new AuditLog entry
         try:
             audit_log = AuditLog(action="signup", target_data=json_data)
-            await db_session.add(audit_log)
+            db_session.add(audit_log)
             logger.debug("Storing audit from db_session")
         except Exception as e:
             err_msg = "Erro ao gravar dados de auditoria"
@@ -49,7 +50,11 @@ class SignupFormState(rx.State):
             logger.warning(f"Document {item[0]} already exists on database")
             raise ValueError(item[1])
         except NoResultFound:
+            logger.debug(f"Document {item[0]} does not exist on database")
             return False
+        except MultipleResultsFound:
+            logger.critical(f"Encontrado multiplos registros com documento {item[0]}")
+            raise
 
     async def exists_document_on_database(self, db_session, form_data: dict) -> bool:
         """Verify if the fields are valid."""
@@ -60,7 +65,8 @@ class SignupFormState(rx.State):
             (form_data["login_id"], EXISTENT_EMAIL_MSG),
         )
         for item in verify_list:
-            self._exists_document(db_session, item)
+            logger.debug(f"Verificando documento {item[0]} no banco de dados")
+            await self._exists_document(db_session, item)
 
     def _verify_password(self, form_data: dict):
         """Verify if the password and confirm password match."""
@@ -91,10 +97,11 @@ class SignupFormState(rx.State):
             new_person.add(doc_email)
             db_session.add(new_person)
             login = Login(user=new_person, password=form_data["password"])
-            await db_session.add_all((new_person, login))
+            db_session.add_all((new_person, login))
         except Exception as e:
-            err_msg = "Erro ao efetuar o seu novo cadastro"
+            err_msg = f"Erro ao efetuar o seu novo cadastro: {str(e)}"
             logger.error(err_msg)
+            get_trace_back_from_exception(logger, e)
             raise ValueError(err_msg, e) from e
 
     @rx.event
@@ -116,7 +123,7 @@ class SignupFormState(rx.State):
                 yield rx.redirect("/signup_ok")
             except ValueError as err:
                 await db_session.rollback()
-                logger.error("Signup OK")
+                logger.error("Ocorreu um erro ao incluir essa nova inscrição")
                 yield rx.toast.error(str(err))
 
     @rx.event

@@ -9,6 +9,7 @@ from nutricao.components.signup import signup_form, signup_ok_form
 from nutricao.components.reset_password import reset_password_form, forgot_password_form
 from nutricao.components.utils import commom_layout
 from nutricao.components.menu import menu_layout
+from nutricao.components.user import my_data
 
 
 APP_ROUTES: list[dict] = [
@@ -68,6 +69,14 @@ APP_ROUTES: list[dict] = [
         "description": "Teste de Menu",
         "image": "https://reflex.dev/logo.png",
     },
+    {
+        "commom_layout": my_data,
+        "route": "/users/my_data",
+        "title": "Menu",
+        "description": "Teste de Menu",
+        "image": "https://reflex.dev/logo.png",
+        "direct": True,
+    },
 ]
 
 
@@ -75,6 +84,10 @@ def add_routes(app: rx.App):
     """Add routes to the app."""
 
     for route_item in APP_ROUTES:
-        component: rx.Component = commom_layout(route_item.pop("commom_layout"))
+        is_direct: bool = route_item.pop("direct", False)
+        if is_direct:
+            component: rx.Component = route_item.pop("commom_layout")()
+        else:
+            component: rx.Component = commom_layout(route_item.pop("commom_layout"))
         route_item["component"] = component
         app.add_page(**route_item)

@@ -29,7 +29,7 @@ def title_options() -> rx.Component:
     LOGGER.debug("loading gender component")
     values = __get_values_from_database()
     component = rx.vstack(
-        rx.text("Tratamento", size="3", weight="medium", text_align="left", width="100%"),
+        rx.text("Modo de tratamento", size="2", weight="medium", text_align="left", width="100%"),
         rx.select.root(
             rx.select.trigger(placeholder="Selecione uma opção", width="100%"),
             rx.select.content(
@@ -38,6 +38,11 @@ def title_options() -> rx.Component:
                     lambda x: rx.select.item(x[1], value=x[0]),
                 )
             ),
+            name="title_options",
+            id="title_options",
         ),
+        spacing="0",
+        justify="start",
+        width="100%",
     )
     return component

@@ -6,6 +6,7 @@
 from types import FunctionType
 import reflex as rx
 from nutricao.components.login.state import LoginState
+from .user_info import user_info_options
 
 
 def logout_item(text: str, icon: str) -> rx.Component:
@@ -95,38 +96,7 @@ def sidebar() -> rx.Component:
                 width="100%",
             ),
             rx.divider(),
-            rx.hstack(
-                rx.icon_button(
-                    rx.icon("user"),
-                    size="3",
-                    radius="full",
-                ),
-                rx.vstack(
-                    rx.box(
-                        rx.text(
-                            LoginState.user.first_name,
-                            size="2",
-                            weight="medium",
-                        ),
-                        rx.text(
-                            LoginState.user.email,
-                            size="2",
-                            weight="medium",
-                        ),
-                        width="100%",
-                    ),
-                    spacing="0",
-                    align="start",
-                    justify="start",
-                    width="100%",
-                ),
-                padding_x="0.5rem",
-                align="center",
-                justify="start",
-                width="100%",
-            ),
-            width="100%",
-            spacing="5",
+            user_info_options(),
         ),
         spacing="5",
         # position="fixed",
