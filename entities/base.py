@@ -127,6 +127,7 @@ class InsertUpdateDate(InsertDate, Base):
     time_updated: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
+        default=func.now(),
         onupdate=func.now(),  # pylint: disable=not-callable
         sort_order=99,
     )

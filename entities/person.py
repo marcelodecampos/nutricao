@@ -3,6 +3,7 @@
 # pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument)
 """Module File"""
 
+from datetime import datetime
 from re import sub as regex_substitute
 from typing import Optional, Self
 from datetime import date
@@ -15,6 +16,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     UniqueConstraint,
+    event,
 )
 from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
 import sqlmodel
@@ -353,26 +355,14 @@ class Person(User):
         ForeignKey("education.id"), nullable=True, sort_order=7
     )
 
-    title: Mapped[Optional[Title]] = relationship(
-        lazy="joined",
-        innerjoin=True,
-    )
-    maritalstatus: Mapped[Optional[MaritalStatus]] = relationship(
-        lazy="joined",
-        innerjoin=True,
-    )
-    gender: Mapped[Optional[Gender]] = relationship(
-        lazy="joined",
-        innerjoin=True,
-    )
-    education: Mapped[Optional[Education]] = relationship(
-        lazy="joined",
-        innerjoin=True,
-    )
+    title: Mapped[Optional[Title]] = relationship()
+    maritalstatus: Mapped[Optional[MaritalStatus]] = relationship()
+    gender: Mapped[Optional[Gender]] = relationship()
+    education: Mapped[Optional[Education]] = relationship()
 
     @property
     def cpf(self) -> str:
-        """Get the email of the user"""
+        """Get the identity/document of the user"""
         for item in self.contact_document:
             if item.contdoc and item.contdoc.id == ContDocID.CPF.value:
                 return item.name
@@ -380,6 +370,7 @@ class Person(User):
 
     @property
     def identity(self) -> str:
+        """Get the identity/document of the user"""
         return self.cpf
 
     @property

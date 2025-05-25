@@ -15,12 +15,21 @@
             "args": [
                 "run",
                 "--env=dev",
-                "--loglevel=debug"
+                "--loglevel=DEBUG"
             ],
             "env": {
                 "ENV_FOR_DEMO": "dev",
                 "PYDEVD_DISABLE_FILE_VALIDATION": "1",
-                "LOGLEVEL": "DEBUG"
+                "LOGLEVEL": "DEBUG",
+                "LOG_TO_FILE": "/var/log/reflex/app.log",
+                "LOG_LEVEL": "DEBUG",
+                "LOG_LEVEL_SQL": "DEBUG",
+                "SQLALCHEMY_ECHO": "true",
+                "SQLALCHEMY_POOL_PRE_PING": "true",
+                "SQLALCHEMY_TRACK_MODIFICATIONS": "true",
+                "SQLALCHEMY_ENGINE_OPTIONS": "true",
+                "SQLALCHEMY_ENGINE_OPTIONS_POOL_SIZE": "20",
+                "SQLALCHEMY_ENGINE_OPTIONS_POOL_TIMEOUT": "30",
             }
         }
     ]

@@ -63,6 +63,7 @@ from .login import (
 from .audit_log import AuditLog, AuditLogModel
 from .access import Role, Permission, Resource, RoleModel, PermissionModel, ResourceModel
 from .system import Menu, MenuModel
+from .listeners import person_before_update_listener
 
 
 """
@@ -130,6 +131,7 @@ __all__ = [
     "Permission",
     "PermissionModel",
     "Person",
+    "person_before_update_listener",
     "PersonModel",
     "PersonType",
     "Resource",
