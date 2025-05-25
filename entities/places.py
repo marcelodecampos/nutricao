@@ -1,7 +1,10 @@
+#!  python3
+# -*- coding: utf-8 -*-
+# pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument,too-few-public-methods,too-many-ancestors)
 """local part of exr"""
 
 from typing import Optional
-
+from decimal import Decimal
 from sqlalchemy import (
     ForeignKey,
     UniqueConstraint,
@@ -11,12 +14,38 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+import reflex as rx
+import sqlmodel
+from . import (
+    SimpleTable,
+    Name,
+    SerialID,
+    InsertUpdateDate,
+    SimpleTableModel,
+    NameModel,
+    SerialIDModel,
+    InsertUpdateDateModel,
+)
 
-from .base import SimpleTable, Name, SerialID, InsertUpdateDate
+
+class CountryModel(SimpleTableModel, rx.Model):
+    """Iso country codes and International name"""
+
+    __tablename__ = "country"
+    alpha_2: str
+    alpha_3: str
+    country_code: str
+    iso_3166_2: str
+    region: Optional[str]
+    sub_region: Optional[str]
+    intermediate_region: Optional[str]
+    region_code: Optional[str]
+    sub_region_code: Optional[str]
+    intermediate_region_code: Optional[str]
 
 
 class Country(SimpleTable):
-    """Iso country codes and Internationaç name"""
+    """Iso country codes and International name"""
 
     __tablename__ = "country"
     alpha_2: Mapped[str] = mapped_column(String(2), sort_order=10)
@@ -39,31 +68,68 @@ class Country(SimpleTable):
     )
 
 
+class StateModel(SimpleTableModel, rx.Model):
+    """Brazil: unidade de federacao"""
+
+    __tablename__ = "state"
+    shortening: str = sqlmodel.Field(unique=True)
+    code: int = sqlmodel.Field(unique=True)
+    latitude: Decimal
+    longitude: Decimal
+    country_id: int = sqlmodel.Field(foreign_key="country.id")
+    country: CountryModel = sqlmodel.Relationship()
+
+
 class State(SimpleTable):
     """Brazil: unidade de federacao"""
 
     __tablename__ = "state"
+
     shortening: Mapped[str] = mapped_column(String(2), unique=True, sort_order=10)
     code: Mapped[int] = mapped_column(Integer, unique=True, sort_order=11)
-    latitude: Mapped[float] = mapped_column(Numeric(8, 3), sort_order=12)
-    longitude: Mapped[float] = mapped_column(Numeric(8, 3), sort_order=13)
+    latitude: Mapped[Decimal] = mapped_column(Numeric(8, 3), sort_order=12)
+    longitude: Mapped[Decimal] = mapped_column(Numeric(8, 3), sort_order=13)
     country_id: Mapped[int] = mapped_column(ForeignKey("country.id"), default="32", sort_order=14)
-
     country: Mapped[Country] = relationship()
+
+
+class CityModel(NameModel, rx.Model):
+    """Brazil: municipio"""
+
+    __tablename__ = "city"
+
+    code: str
+    state_id: int = sqlmodel.Field(foreign_key="state.code")
+    state: State = sqlmodel.Relationship()
+    __table_args__ = (
+        sqlmodel.UniqueConstraint("state_id", "code", name="uk_city_code_state_id"),
+        sqlmodel.Index("ix_city_name", "name"),
+    )
 
 
 class City(Name):
     """Brazil: municipio"""
 
     __tablename__ = "city"
-
     code: Mapped[str] = mapped_column(String(5), sort_order=10)
     state_id: Mapped[int] = mapped_column(ForeignKey("state.code"), sort_order=11)
     state: Mapped[State] = relationship()
+    __table_args__ = (
+        UniqueConstraint("state_id", "code", name="uk_city_code_state_id"),
+        Index("ix_city_name", "name"),
+    )
 
-    uk = UniqueConstraint("state_id", "code", name="uk_city_code_state_id")
-    name_key = Index("ix_city_name", "name")
-    __table_args__ = (uk, name_key)
+
+class AddressModel(SerialIDModel, InsertUpdateDateModel, rx.Model):
+    """address table"""
+
+    __tablename__ = "address"
+    address: str
+    complement: Optional[str]
+    district: Optional[str]
+    zip_code: Optional[str]
+    city_id: int = sqlmodel.Field(foreign_key="city.id")
+    city: CityModel = sqlmodel.Relationship()
 
 
 class Address(SerialID, InsertUpdateDate):

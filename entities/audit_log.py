@@ -5,8 +5,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String
-
-from .base import SerialID, InsertDate
+import reflex as rx
+from .base import SerialID, InsertDate, SerialIDModel, InsertDateModel
 
 
 class AuditLog(SerialID, InsertDate):
@@ -21,3 +21,12 @@ class AuditLog(SerialID, InsertDate):
         nullable=False,
         sort_order=10,
     )
+
+
+class AuditLogModel(SerialIDModel, InsertDateModel, rx.Model):
+    """audit data class"""
+
+    __table_args__ = {"schema": "audit"}
+    __tablename__ = "audit_log"
+    target_data: dict
+    action: str

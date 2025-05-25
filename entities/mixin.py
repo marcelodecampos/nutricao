@@ -3,12 +3,11 @@
 # pylint: disable=too-few-public-methods
 """init module for mixin aux class component."""
 
-import json
 from typing import Optional
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, BigInteger, Integer, DateTime, Boolean
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy import String, DateTime, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, validates
 from sqlalchemy.sql import func
 
 DEFAULT_NAME_FIELD_SIZE = 256
@@ -37,7 +36,7 @@ class NameMixin:
     name: Mapped[str] = mapped_column(String(DEFAULT_NAME_FIELD_SIZE), nullable=False, sort_order=2)
 
     @validates("name")
-    def validate_name(self, key, field: str) -> str:
+    def validate_name(self, key, field: str) -> str:  # pylint: disable=unused-argument
         """Should we make it uppercase????"""
         if field:
             return field.upper().strip()

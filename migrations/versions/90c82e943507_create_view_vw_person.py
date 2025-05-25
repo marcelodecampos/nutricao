@@ -53,7 +53,7 @@ def create_view_pessoa() -> None:
             p.title_id,
             p.marital_status_id,
             p.education_id,
-            u.time_created, u.time_updated,
+            u.created_at, u.updated_at,
             ( SELECT unnamed_subquery.documents
                 FROM ( SELECT ucd.user_id,
                             array_agg(ucd.name) AS documents

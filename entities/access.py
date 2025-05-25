@@ -3,23 +3,23 @@
 # pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument)
 """Module File"""
 
-from typing import Optional
-from datetime import date
+import reflex as rx
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
 
-from sqlalchemy import (
-    String,
-    CHAR,
-    Date,
-    ForeignKey,
-    Boolean,
-    CheckConstraint,
-    UniqueConstraint,
+from . import (
+    SimpleTable,
+    SimpleTableModel,
 )
-from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
-from sqlmodel import Relationship
 
-from .base import Base, Name, SimpleTable, DEFAULT_NAME_FIELD_SIZE
-from .person import Person, Company
+from .base import DEFAULT_NAME_FIELD_SIZE
+
+
+class RoleModel(SimpleTableModel, rx.Model):
+    """Access Role Simple Table"""
+
+    __table_args__ = {"schema": "access"}
+    __tablename__ = "role"
 
 
 class Role(SimpleTable):
@@ -29,11 +29,27 @@ class Role(SimpleTable):
     __tablename__ = "role"
 
 
+class PermissionModel(SimpleTableModel, rx.Model):
+    """Permission Role"""
+
+    __table_args__ = {"schema": "access"}
+    __tablename__ = "permission"
+
+
 class Permission(SimpleTable):
     """Permission Role"""
 
     __table_args__ = {"schema": "access"}
     __tablename__ = "permission"
+
+
+class ResourceModel(SimpleTableModel, rx.Model):
+    """Permission Role"""
+
+    __table_args__ = {"schema": "access"}
+    __tablename__ = "resource"
+
+    url: str
 
 
 class Resource(SimpleTable):

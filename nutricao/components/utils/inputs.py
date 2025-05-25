@@ -20,11 +20,16 @@ def commom_label(label: str = "", **props):
         "text_align": "left",
         "width": "100%",
     }
-    label_props = intersect(label_props, **props)
+    label_props = label_props | props
     return rx.text(label, **label_props)
 
 
-def common_input(label_name: str = "", icon: rx.Component | None = None, **props) -> rx.Component:
+def common_input(
+    inputprops: dict,
+    labelprops: dict,
+    label_name: str = "",
+    icon: rx.Component | None = None,
+) -> rx.Component:
     """commom input"""
     input_props = {
         "id": "name",
@@ -37,42 +42,80 @@ def common_input(label_name: str = "", icon: rx.Component | None = None, **props
         "type": "text",
         "placeholder": "",
     }
-    input_props = intersect(input_props, **props)
+    input_props = input_props | inputprops
     return rx.vstack(
-        commom_label(label_name, **props),
-        rx.input(rx.cond(icon, rx.input.slot(icon)), **input_props),
+        commom_label(label_name, **labelprops),
+        rx.input(
+            rx.cond(icon, rx.input.slot(icon)),
+            **input_props,
+        ),
         spacing="0",
         justify="start",
         width="100%",
     )
 
 
-def common_name_input(**props) -> rx.Component:
+def common_name_input(
+    inputprops: dict | None = None,
+    labelprops: dict | None = None,
+) -> rx.Component:
     """Name input component."""
-    props["name"] = "name"
-    props["id"] = "name"
-    return (common_input("Nome", rx.icon("user"), **props),)
+    if not inputprops:
+        inputprops = {}
+    if not labelprops:
+        labelprops = {}
+    inputprops["name"] = "name"
+    inputprops["id"] = "input_name"
+    return (
+        common_input(
+            inputprops=inputprops,
+            labelprops=labelprops,
+            label_name="Nome",
+            icon=rx.icon("user"),
+        ),
+    )
 
 
-def common_identification_input(**props) -> rx.Component:
+def common_identification_input(
+    inputprops: dict | None = None,
+    labelprops: dict | None = None,
+) -> rx.Component:
     """CPF input component."""
-    props["name"] = "cpf"
-    props["id"] = "cpf"
-    return (common_input("CPF", rx.icon("user"), **props),)
+    if not inputprops:
+        inputprops = {}
+    if not labelprops:
+        labelprops = {}
+    inputprops["name"] = "cpf"
+    inputprops["id"] = "cpf"
+    return common_input(inputprops, labelprops, label_name="CPF", icon=rx.icon("user"))
 
 
-def common_birthdate_input(**props) -> rx.Component:
+def common_birthdate_input(
+    inputprops: dict | None = None,
+    labelprops: dict | None = None,
+) -> rx.Component:
     """CPF input component."""
-    props["name"] = "birthdate"
-    props["id"] = "birthdate"
-    props["type"] = "date"
-    return common_input("Data de Nascimento", None, **props)
+    if not inputprops:
+        inputprops = {}
+    if not labelprops:
+        labelprops = {}
+    inputprops["name"] = "birthdate"
+    inputprops["id"] = "birthdate"
+    inputprops["type"] = "date"
+    return common_input(inputprops, labelprops, label_name="Data de Nascimento")
 
 
-def common_nickname_input(**props) -> rx.Component:
+def common_nickname_input(
+    inputprops: dict | None = None,
+    labelprops: dict | None = None,
+) -> rx.Component:
     """CPF input component."""
-    props["name"] = "nickname"
-    props["id"] = "nickname"
-    props["max_length"] = 32
-    props["placeholder"] = "Como gostaria de ser chamado"
-    return common_input("Apelido", None, **props)
+    if not inputprops:
+        inputprops = {}
+    if not labelprops:
+        labelprops = {}
+    inputprops["name"] = "nickname"
+    inputprops["id"] = "nickname"
+    inputprops["max_length"] = 32
+    inputprops["placeholder"] = "Como gostaria de ser chamado"
+    return common_input(inputprops, labelprops, label_name="Apelido")

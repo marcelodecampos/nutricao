@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "reflex",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "reflex",
             "cwd": "${workspaceFolder}",
@@ -15,11 +15,12 @@
             "args": [
                 "run",
                 "--env=dev",
-                "--loglevel=debug",
+                "--loglevel=debug"
             ],
             "env": {
                 "ENV_FOR_DEMO": "dev",
-                "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+                "PYDEVD_DISABLE_FILE_VALIDATION": "1",
+                "LOGLEVEL": "DEBUG"
             }
         }
     ]

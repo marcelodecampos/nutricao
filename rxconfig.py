@@ -25,7 +25,6 @@ config = rx.Config(
     redis_url="redis://db.local:6379/0[&health_check_interval=10&retry_on_timeout=False]",
     frontend_port=3000,
     backend_port=8080,
-    loglevel="info",
     state_manager_mode=rx.constants.StateManagerMode.REDIS,
     echo="true",
     echo_pool="true",

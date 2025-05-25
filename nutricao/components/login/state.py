@@ -88,6 +88,9 @@ class LoginState(rx.State):
         async with self:
             login_entity: Login = await self.find_login_by_document(form_data)
             if login_entity:
+                from pprint import pprint, pformat
+
+                logger.debug(pformat(login_entity.to_dict()))
                 self.user = AppUser(
                     login_id=login_entity.user_id,
                     name=login_entity.user.name,

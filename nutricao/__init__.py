@@ -41,11 +41,11 @@ def configure_logger():
     logger = logging.getLogger()  # root logger
     logger.setLevel(os.environ.get("LOG_LEVEL", logging.DEBUG))
 
-    # stream_handler = logging.StreamHandler()
-    # stream_handler.setLevel(os.environ.get("LOG_LEVEL", logging.DEBUG))
-    # stream_handler.setFormatter(CustomFormatter())
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(os.environ.get("LOG_LEVEL", logging.DEBUG))
+    stream_handler.setFormatter(CustomFormatter())
 
-    # logger.addHandler(stream_handler)
+    logger.addHandler(stream_handler)
     logging.getLogger("watchfiles.main").setLevel(logging.WARNING)
     logger.debug("The logger is configured")
 

@@ -4,16 +4,14 @@
 """module file"""
 
 import json
-from contextlib import suppress
 from datetime import datetime
 from typing import Optional
 from functools import total_ordering
+import reflex as rx
 from sqlalchemy import DateTime, Integer, String, Boolean, BigInteger, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
-from sqlalchemy.orm.exc import DetachedInstanceError
 from sqlalchemy.sql import func
-from typing import Any
-
+import sqlmodel
 from utils.logger import get_logger
 
 # Create a PostgreSQL database engine
@@ -34,43 +32,32 @@ class Base(DeclarativeBase):
     #         if hasattr(self, key):
     #             setattr(self, key, value)
 
-    def dict(self, **kwargs):
-        """Convert the object to a dictionary.
 
-        Args:
-            kwargs: Ignored but needed for compatibility.
+class SerialIDModel(rx.Model):
+    """Abstract class to implement a serial id on almost every table"""
 
-        Returns:
-            The object as a dictionary.
-        """
-        base_fields = {name: getattr(self, name) for name in self.__fields__}
-        relationships = {}
-        # SQLModel relationships do not appear in __fields__, but should be included if present.
-        for name in self.__sqlmodel_relationships__:
-            with suppress(
-                DetachedInstanceError  # This happens when the relationship was never loaded and the session is closed.
-            ):
-                relationships[name] = self._dict_recursive(getattr(self, name))
-        return {
-            **base_fields,
-            **relationships,
-        }
+    id: Optional[int] = sqlmodel.Field(primary_key=True)
 
-    @classmethod
-    def _dict_recursive(cls, value: Any):
-        """Recursively serialize the relationship object(s).
+    def __str__(self):
+        return f"User(id={self.id})"
 
-        Args:
-            value: The value to serialize.
+    def __eq__(self, other: any):
+        if not other:
+            return False
+        if isinstance(other, SerialID):
+            return self.id == other.id
+        if isinstance(other, (int | Integer | BigInteger)):
+            return self.id == other
+        return False
 
-        Returns:
-            The serialized value.
-        """
-        if hasattr(value, "dict"):
-            return value.dict()
-        elif isinstance(value, list):
-            return [cls._dict_recursive(item) for item in value]
-        return value
+    def __lt__(self, other: any):
+        if not other:
+            return False
+        if isinstance(other, SerialID):
+            return self.id < other.id
+        if isinstance(other, (int | Integer | BigInteger)):
+            return self.id < other
+        return False
 
 
 @total_ordering
@@ -110,6 +97,12 @@ class SerialID(Base):
         return json.dumps(dict_repr, indent=2)
 
 
+class InsertDateModel(rx.Model):
+    """Abstract class to implement an insert date and update date on almost every table"""
+
+    time_created: Optional[datetime] = sqlmodel.Field(datetime.now(), nullable=True)
+
+
 class InsertDate:
     """Abstract class to implement an insert date and update date on almost every table"""
 
@@ -119,6 +112,12 @@ class InsertDate:
         server_default=func.now(),  # pylint: disable=not-callable
         sort_order=98,
     )
+
+
+class InsertUpdateDateModel(InsertDateModel, rx.Model):
+    """Abstract class to implement an insert date and update date on almost every table"""
+
+    time_updated: Optional[datetime]
 
 
 class InsertUpdateDate(InsertDate, Base):
@@ -131,6 +130,12 @@ class InsertUpdateDate(InsertDate, Base):
         onupdate=func.now(),  # pylint: disable=not-callable
         sort_order=99,
     )
+
+
+class NameModel(SerialIDModel, InsertUpdateDateModel, rx.Model):
+    """Abstract class to implement a name on almost every table"""
+
+    name: str
 
 
 class Name(SerialID, InsertUpdateDate):
@@ -150,11 +155,28 @@ class Name(SerialID, InsertUpdateDate):
         return f"Name(name={self.name}, {super().__str__()}"
 
 
-class UniqName(Name):
+class UniqueNameMixin:
+    """Abstract class to implement a name on almost every table"""
+
+    __table_args__ = (UniqueConstraint("name"),)
+
+
+class UniqNameModel(UniqueNameMixin, NameModel):
     """Abstract class to implement a name on almost every table"""
 
     __abstract__ = True
-    __table_args__ = (UniqueConstraint("name"),)
+
+
+class UniqName(UniqueNameMixin, Name):
+    """Abstract class to implement a name on almost every table"""
+
+    __abstract__ = True
+
+
+class IsValidModel(rx.Model):
+    """IsValid mixin class"""
+
+    is_valid: Mapped[bool] = sqlmodel.Field(True)
 
 
 class IsValid:
@@ -166,6 +188,10 @@ class IsValid:
         server_default="t",
         sort_order=97,
     )
+
+
+class SimpleTableModel(IsValidModel, UniqNameModel, rx.Model):
+    """Abstract class to implement a name on almost every table"""
 
 
 class SimpleTable(IsValid, UniqName):

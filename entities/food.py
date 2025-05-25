@@ -1,7 +1,7 @@
 """local part of exr"""
 
 from typing import Optional
-
+import reflex as rx
 from sqlalchemy import (
     ForeignKey,
     Integer,
@@ -9,8 +9,14 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlmodel import Field, Relationship
+from .base import SimpleTable, Name, SimpleTableModel, NameModel
 
-from .base import SimpleTable, Name
+
+class FoodGroupModel(SimpleTableModel, rx.Model):
+    """Food Group"""
+
+    __tablename__ = "food_group"
 
 
 class FoodGroup(SimpleTable):
@@ -19,10 +25,27 @@ class FoodGroup(SimpleTable):
     __tablename__ = "food_group"
 
 
+class FoodComponentModel(SimpleTableModel, rx.Model):
+    """Food Group"""
+
+    __tablename__ = "food_component"
+
+
 class FoodComponent(SimpleTable):
     """Food Group"""
 
     __tablename__ = "food_component"
+
+
+class FoodModel(NameModel, rx.Model):
+    """Food table"""
+
+    __tablename__ = "food"
+    centific_name: Optional[str]
+    brand: Optional[str]
+    tbca_id: Optional[str]
+    food_group_id: int = Field(foreign_key="food_group.id")
+    food_group: FoodGroupModel = Relationship()
 
 
 class Food(Name):
@@ -36,6 +59,16 @@ class Food(Name):
         ForeignKey("food_group.id"), index=True, sort_order=13
     )
     food_group: Mapped[FoodGroup] = relationship()
+
+
+class FoodCompositionModel(NameModel, rx.Model):
+    """Food Group"""
+
+    value: Optional[str]
+    food_id: int = Field(foreign_key="food.id")
+    food: FoodModel = Relationship()
+    food_component_id: int = Field(foreign_key="food_component.id")
+    food_component: FoodComponentModel = Relationship()
 
 
 class FoodComposition(Name):
