@@ -75,7 +75,6 @@ APP_ROUTES: list[dict] = [
         "title": "Menu",
         "description": "Teste de Menu",
         "image": "https://reflex.dev/logo.png",
-        "direct": True,
     },
 ]
 

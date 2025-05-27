@@ -29,18 +29,24 @@ def common_select_component(values, label: str, **inputprops) -> rx.Component:
     """common combo box component."""
     LOGGER.debug(f"loading common component. {values}")
     component = rx.vstack(
-        rx.text(label, size="2", weight="medium", text_align="left", width="100%"),
+        rx.text(label, size="1", weight="medium", text_align="left", width="100%"),
         rx.select.root(
             rx.select.trigger(placeholder="Selecione uma opção", width="100%"),
             rx.select.content(
                 rx.foreach(
                     values,
-                    lambda x: rx.select.item(x[1], value=x[0]),
+                    lambda x: rx.select.item(
+                        x[1],
+                        value=x[0],
+                        size="1",
+                    ),
                 )
             ),
             default_value="1",
             **inputprops,
+            size="1",
         ),
+        padding="0.3rem",
         spacing="0",
         justify="start",
         width="100%",

@@ -3,10 +3,9 @@
 # pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument)
 """Module File"""
 
-from datetime import datetime
+from datetime import date
 from re import sub as regex_substitute
 from typing import Optional, Self
-from datetime import date
 import reflex as rx
 from sqlalchemy import (
     String,
@@ -16,7 +15,6 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     UniqueConstraint,
-    event,
 )
 from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
 import sqlmodel
@@ -328,7 +326,7 @@ class PersonModel(UserModel, rx.Model):
     @property
     def first_name(self) -> str:
         """Get the email of the user"""
-        return self.name.split(" ")[0]
+        return self.nickname or self.name.split(" ")[0]
 
 
 class Person(User):
@@ -376,7 +374,7 @@ class Person(User):
     @property
     def first_name(self) -> str:
         """Get the email of the user"""
-        return self.name.split(" ")[0]
+        return self.nick_name or self.name.split(" ")[0]
 
 
 class CompanyModel(UserModel, rx.Model):

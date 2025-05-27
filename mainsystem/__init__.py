@@ -7,10 +7,12 @@ import logging
 import logging.handlers
 import sys
 import os
+from .app_state import AppState
 
 
 # just in case
 sys.path.append(os.getcwd())
+
 
 __version__ = "0.1.0"
 __author__ = "Marcelo de Campos"
@@ -60,3 +62,11 @@ def configure_logger():
 
 
 configure_logger()
+
+
+__all__ = [
+    "AppState",
+    "configure_logger",
+    "__version__",
+    "__author__",
+]

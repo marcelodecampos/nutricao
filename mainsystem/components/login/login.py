@@ -45,7 +45,7 @@ def email_input() -> rx.Component:
             size="3",
             width="100%",
             required=True,
-            text=LoginState.email,
+            text=LoginState.user_email,
         ),
         spacing="2",
         justify="start",
@@ -138,5 +138,5 @@ def login_form() -> rx.Component:
         ),
         width="100%",
         height="80vh",
-        #padding="2em",
+        # padding="2em",
     )

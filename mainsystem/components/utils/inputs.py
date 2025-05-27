@@ -15,10 +15,12 @@ def intersect(to_dict: dict, **props) -> dict:
 def commom_label(label: str = "", **props):
     """commom label for inputs"""
     label_props = {
-        "size": "2",
+        "size": "1",
         "weight": "medium",
         "text_align": "left",
         "width": "100%",
+        "padding": "0",
+        "spacing": "0",
     }
     label_props = label_props | props
     return rx.text(label, **label_props)
@@ -34,13 +36,15 @@ def common_input(
     input_props = {
         "id": "name",
         "name": "name",
-        "size": "2",
+        "size": "1",
         "width": "100%",
         "required": True,
         "max_length": 128,
         "auto_focus": True,
         "type": "text",
         "placeholder": "",
+        "padding": "0",
+        "spacing": "0",
     }
     input_props = input_props | inputprops
     return rx.vstack(
@@ -49,9 +53,10 @@ def common_input(
             rx.cond(icon, rx.input.slot(icon)),
             **input_props,
         ),
-        spacing="0",
         justify="start",
         width="100%",
+        padding="0.3rem",
+        spacing="0",
     )
 
 

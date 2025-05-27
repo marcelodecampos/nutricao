@@ -5,7 +5,7 @@
 
 from types import FunctionType
 import reflex as rx
-from mainsystem.components.login.state import LoginState
+from mainsystem import AppState
 from .user_info import user_info_options
 
 
@@ -26,7 +26,7 @@ def logout_item(text: str, icon: str) -> rx.Component:
                 },
                 "border-radius": "0.5em",
             },
-            on_click=LoginState.logout,
+            on_click=AppState.logout_user,
         ),
         underline="none",
         weight="medium",
@@ -72,6 +72,7 @@ def sidebar_items() -> rx.Component:
 
 
 def sidebar() -> rx.Component:
+    """Create a sidebar profile section."""
     return rx.vstack(
         rx.hstack(
             rx.image(
@@ -115,10 +116,17 @@ def sidebar() -> rx.Component:
 def desktop_sidebar(component: rx.Component = None) -> rx.Component:
     """Create a sidebar profile section."""
     return rx.desktop_only(
-        rx.box(
-            sidebar(),
+        rx.hstack(
+            rx.box(
+                sidebar(),
+            ),
+            rx.box(
+                component,
+                border="2px solid magenta",
+                width="100%",
+                height="100%",
+            ),
         ),
-        rx.box(component),
     )
 
 
@@ -298,6 +306,7 @@ def public_commom_form(callback_result: rx.Component) -> rx.Component:
 
 
 def private_commom_form(callback_result: rx.Component) -> rx.Component:
+    """Create a common form for private pages."""
     return rx.box(
         desktop_sidebar(callback_result),
         mobile_sidebar(),
@@ -311,7 +320,7 @@ def commom_layout(callback: FunctionType) -> rx.Component:
         callback_result = rx.box(callback())
     return rx.box(
         rx.cond(
-            LoginState.is_logged_in,
+            AppState.is_logged_in,
             private_commom_form(callback_result),
             public_commom_form(callback_result),
         ),

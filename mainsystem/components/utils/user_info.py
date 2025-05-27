@@ -4,7 +4,7 @@
 """init file for utils module."""
 
 import reflex as rx
-from mainsystem.components.login.state import LoginState
+from mainsystem import AppState
 
 
 def user_info_ly():
@@ -18,12 +18,12 @@ def user_info_ly():
         rx.vstack(
             rx.box(
                 rx.text(
-                    LoginState.user.first_name,
+                    AppState.user_nickname,
                     size="2",
                     weight="medium",
                 ),
                 rx.text(
-                    LoginState.user.email,
+                    AppState.user_email,
                     size="2",
                     weight="medium",
                 ),
@@ -48,9 +48,9 @@ def user_info_options():
             user_info_ly(),
         ),
         rx.menu.content(
-            rx.menu.item("Meus Dados"),
+            rx.menu.item("Meus Dados", on_click=rx.redirect("/users/my_data")),
             rx.menu.item("Alterar Senha"),
             rx.menu.separator(),
-            rx.menu.item("Sair do sistema", on_click=LoginState.logout),
+            rx.menu.item("Sair do sistema", on_click=AppState.logout_user),
         ),
     )

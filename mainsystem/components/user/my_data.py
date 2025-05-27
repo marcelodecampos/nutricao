@@ -6,10 +6,10 @@
 import logging
 from datetime import datetime
 from typing import Optional
-import sqlmodel
 from sqlalchemy import select
 import reflex as rx
-
+from faker import Faker
+from mainsystem import AppState
 
 from mainsystem.components.utils import (
     common_name_input as name,
@@ -25,22 +25,18 @@ from mainsystem.components.select import (
 )
 
 
-from entities import Person, User, Gender
+from entities import Person, User
 
 
-class MyDataState(rx.State):
+class MyDataState(AppState):
     """My Data State Event Class"""
 
-    name: str = ""
-    nick_name: Optional[str] = ""
     identity: Optional[str] = ""
     birthdate: Optional[str] = None
     gender_id: Optional[str] = None
     education_id: Optional[str] = None
     marital_status_id: Optional[str] = None
     title_id: Optional[str] = None
-
-    current_user_id: int = 0
 
     _logger = logging.getLogger()
 
@@ -49,8 +45,8 @@ class MyDataState(rx.State):
         if not current_user:
             raise ValueError("Login não pode ser vazio ou nulo")
 
-        self.name: str = current_user.name
-        self.nick_name: Optional[str] = current_user.nick_name
+        self.user_name: str = current_user.name
+        self.user_nickname: Optional[str] = current_user.nick_name
         self.birthdate: Optional[str] = str(current_user.birthdate)
         if isinstance(current_user, Person):
             self.gender_id: str = str(current_user.gender_id)
@@ -64,8 +60,8 @@ class MyDataState(rx.State):
         if not current_user:
             raise ValueError("Login não pode ser vazio ou nulo")
 
-        current_user.name = self.name
-        current_user.nick_name = self.nick_name
+        current_user.name = self.user_name
+        current_user.nick_name = self.user_nickname
         current_user.birthdate = datetime.strptime(self.birthdate, "%Y-%m-%d").date()
         if isinstance(current_user, Person):
             current_user.gender_id = self.gender_id
@@ -75,12 +71,14 @@ class MyDataState(rx.State):
             # current_user.identity = self.identity
 
     @rx.event
-    async def handle_init(self, current_user_id: int):
+    async def handle_init(self):
         """handle init (on mount)  event"""
-        self.current_user_id = current_user_id
-        self._logger.debug(f"Current User: {current_user_id}")
+        if not self.current_user_id:
+            yield rx.redirect("/")
+            return
+        self._logger.debug(f"Current User: {self.current_user_id}")
         with rx.session() as db_session:
-            query = select(User).where(User.id == current_user_id)
+            query = select(User).where(User.id == self.current_user_id)
             stmt = db_session.scalars(query).unique()
             entity: User = stmt.one()
             self._logger.debug(f"Loaded entity: {type(entity)} - {str(entity)}")
@@ -117,19 +115,25 @@ def select_label(label: str) -> rx.Component:
     )
 
 
+def default_height(subtract: int = 0) -> str:
+    """default height for components"""
+    value = 300 - (subtract * 5 if subtract < 35 else 34)
+    return f"f{value}"
+
+
 def form_fields() -> rx.Component:
     """form fields component"""
     return rx.flex(
         name(
             inputprops=make_params(
-                value=MyDataState.name,
-                on_change=MyDataState.set_name,
+                value=MyDataState.user_name,
+                on_change=MyDataState.set_user_name,
             ),
         ),
         nickname(
             inputprops=make_params(
-                value=MyDataState.nick_name,
-                on_change=MyDataState.set_nick_name,
+                value=MyDataState.user_nickname,
+                on_change=MyDataState.set_user_nickname,
             )
         ),
         rx.hstack(
@@ -175,17 +179,25 @@ def form_fields() -> rx.Component:
             ),
         ),
         rx.separator(),
-        rx.button(
-            "Salvar Alterações",
-            size="3",
+        rx.flex(
+            rx.button(
+                "Salvar Alterações",
+                size="2",
+                width="100%",
+                type="submit",
+                id="login_button",
+                name="login_button",
+                padding="0",
+                spacing="0",
+            ),
+            padding="1rem",
+            justify="center",
             width="100%",
-            type="submit",
-            id="login_button",
-            name="login_button",
         ),
         justify="start",
         direction="column",
-        spacing="4",
+        spacing="0",
+        border="2px solid orange",
         width="100%",
     )
 
@@ -194,15 +206,92 @@ def personal_data() -> rx.Component:
     """personal data form"""
     return rx.form(
         form_fields(),
-        spacing="2",
         width="100%",
-        # on_submit=LoginState.handle_submit,
+        height="100%",
         prevent_default=True,
         id="login_form",
         name="login_form",
         method="POST",
+        spacing="0",
         padding="0",
         on_submit=MyDataState.handle_submit,
+    )
+
+
+def documents() -> rx.Component:
+    """Users documents table"""
+    my_documents = []
+    doc_type = [
+        "CPF",
+        "PASSAPORTE",
+        "IDENTIDADE",
+        "PIS/PASEP",
+        "TIT. ELEITOR",
+        "CERTIDÃO DE NASCIMENTO",
+        "CNPJ",
+    ]
+    faker_data = Faker("pt_BR")
+    for index in range(300):
+        my_documents.append(
+            {
+                "Tipo": doc_type[faker_data.random_int(0, 6)],
+                "Documento": faker_data.cpf(),
+                "Principal": False if index % 5 == 0 else True,
+            }
+        )
+    return rx.table.root(
+        rx.table.header(
+            rx.table.row(
+                rx.table.column_header_cell("Tipo"),
+                rx.table.column_header_cell("Documento"),
+            ),
+        ),
+        rx.table.body(
+            rx.foreach(
+                my_documents,
+                lambda doc: rx.table.row(
+                    rx.table.cell(doc["Tipo"]),
+                    rx.table.cell(doc["Documento"]),
+                    on_click=rx.toast.info("Ohhhhh!Yewsssss"),
+                ),
+            ),
+        ),
+        width="100%",
+        height="395px",
+        border="2px solid white",
+    )
+
+
+def contacts() -> rx.Component:
+    """Users documents table"""
+    return rx.table.root(
+        rx.table.header(
+            rx.table.row(
+                rx.table.column_header_cell("Tipo"),
+                rx.table.column_header_cell("Contato"),
+                rx.table.column_header_cell("Principal"),
+            ),
+        ),
+        rx.table.body(
+            rx.table.row(
+                rx.table.row_header_cell("Danilo Sousa"),
+                rx.table.cell("danilo@example.com"),
+                rx.table.cell("Developer"),
+            ),
+            rx.table.row(
+                rx.table.row_header_cell("Zahra Ambessa"),
+                rx.table.cell("zahra@example.com"),
+                rx.table.cell("Admin"),
+            ),
+            rx.table.row(
+                rx.table.row_header_cell("Jasper Eriks"),
+                rx.table.cell("jasper@example.com"),
+                rx.table.cell("Developer"),
+            ),
+        ),
+        width="100%",
+        height="395px",
+        border="2px solid white",
     )
 
 
@@ -221,46 +310,59 @@ def my_data() -> rx.Component:
                     rx.tabs.content(
                         personal_data(),
                         value="personal_data",
-                        height="100%",
                         padding="0",
-                        border_radius="0",
-                        border_width="0",
+                        width="100%",
+                        height="400px",
+                        border="2px solid brown",
                     ),
                     rx.tabs.content(
-                        rx.text("item on tab 2"),
+                        documents(),
                         value="documents",
-                        height="100%",
                         padding="0",
-                        border_radius="0",
-                        border_width="0",
+                        width="100%",
+                        height="400px",
+                        border="2px solid brown",
                     ),
                     rx.tabs.content(
-                        rx.text("item on tab 3"),
+                        contacts(),
                         value="contacts",
-                        height="100%",
                         padding="0",
-                        border_radius="0",
-                        border_width="0",
+                        width="100%",
+                        height="400px",
+                        border="2px solid brown",
                     ),
                     default_value="personal_data",
-                    spacing="1",
                     width="100%",
-                    padding="0",
+                    height="450px",
                     border_radius="0",
-                    border_width="0",
                     border_color="transparent",
                     background_color="transparent",
+                    border="2px solid blue",
+                    max_height=default_height(3),
+                    min_height=default_height(3),
+                    padding="0",
+                    spacing="0",
                 ),
-                spacing="1",
                 width="100%",
+                height="480px",
+                overflow="auto",
+                border="2px solid green",
+                padding="0",
+                spacing="0",
             ),
             size="4",
             max_width="35em",
             width="35em",
-            padding="1",
+            height="495px",
+            overflow="auto",
+            padding="0",
+            spacing="0",
+            border="2px solid yellow",
         ),
         width="100%",
-        height="80vh",
+        height="500px",
+        overflow="auto",
         # padding="2em",
-        on_mount=MyDataState.handle_init(1),
+        on_mount=MyDataState.handle_init,
+        border="2px solid red",
     )
