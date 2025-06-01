@@ -10,15 +10,11 @@ import reflex as rx
 from entities import Menu
 
 
-class test(rx.Model):
-    pass
-
-
 class TestState(rx.State):
     """Class test state"""
 
     menu_ids: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    _list_of_options: List[Menu] = None
+    _list_of_options: List[Menu] = []
 
     @rx.event
     def on_mount(self):

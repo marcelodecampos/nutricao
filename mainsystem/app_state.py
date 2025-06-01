@@ -7,7 +7,6 @@ import logging
 from typing import Optional
 import reflex as rx
 from entities import User
-from faker import Faker
 
 
 class AppState(rx.State):

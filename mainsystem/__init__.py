@@ -43,7 +43,7 @@ class CustomFormatter(logging.Formatter):
 def configure_logger():
     logger = logging.getLogger()  # root logger
     env_log_name = "LOGLEVEL"
-    log_level = os.environ.get(env_log_name, logging.DEBUG).upper()
+    log_level = os.environ.get(env_log_name, "DEBUG").upper()
     logger.setLevel(log_level)
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(log_level)

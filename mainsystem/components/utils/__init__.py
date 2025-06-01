@@ -14,6 +14,7 @@ from .inputs import (
     common_birthdate_input,
     common_nickname_input,
 )
+from .simple_table import simple_table_component, test_simple_table
 
 __all__ = [
     "email_input",
@@ -25,6 +26,8 @@ __all__ = [
     "common_identification_input",
     "common_birthdate_input",
     "common_nickname_input",
+    "simple_table_component",
+    "test_simple_table",
 ]
 
 __version__ = "0.1.0"

@@ -115,6 +115,24 @@ def load_contact_document(session) -> None:
             allow_login=True,
             contdoc_type="C",
         ),
+        ContactDocument(
+            name="InscricaoEstadual",
+            allow_login=False,
+            contdoc_type="D",
+            person_type="J",
+        ),
+        ContactDocument(
+            name="InscricaoMunicipal",
+            allow_login=False,
+            contdoc_type="D",
+            person_type="J",
+        ),
+        ContactDocument(
+            name="InscricaoEstadual",
+            allow_login=False,
+            contdoc_type="D",
+            person_type="J",
+        ),
     )
     session: Session = Session(bind=op.get_bind())
     session.add_all(entitites)

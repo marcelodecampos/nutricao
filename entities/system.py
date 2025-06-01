@@ -7,56 +7,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey, String, BigInteger, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
-import sqlmodel
-import reflex as rx
-from .base import IsValid, Base, IsValidModel
-
-
-class MenuModel(IsValidModel, rx.Model):
-    """system menu data class"""
-
-    __tablename__ = "menu"
-
-    id: int = sqlmodel.Field(primary_key=True)
-    name: str = sqlmodel.Field(unique=True)
-    url: Optional[str] = sqlmodel.Field(unique=True)
-    icon: Optional[str]
-    index: Optional[int]
-    parent_id: Optional[int] = sqlmodel.Field(foreign_key="menu.id")
-    time_created: Optional[datetime] = sqlmodel.Field(datetime.now())
-    time_updated: Optional[datetime]
-    parent: Optional["Menu"] = sqlmodel.Relationship(
-        sa_relationship=relationship("MenuModel", remote_side=[id], foreign_keys=[parent_id])
-    )
-
-    def __str__(self):
-        url = self.url if self.url else ""
-        return f"{self.id:03d} - {self.name:<32} {url:<32} "
-
-    def __eq__(self, other: any):
-        if not other:
-            return False
-        if isinstance(other, Menu):
-            return self.id == other.id
-        if isinstance(other, (int | Integer | BigInteger)):
-            return self.id == other
-        return False
-
-    def __lt__(self, other: any):
-        if not other:
-            return False
-        if isinstance(other, Menu):
-            return self.id < other.id
-        if isinstance(other, (int | Integer | BigInteger)):
-            return self.id < other
-        return False
-
-    def __repr__(self):
-        dict_repr = {c.name: getattr(self, c.name) for c in self.__table__.columns}
-        for key, value in dict_repr.items():
-            if isinstance(value, datetime):
-                dict_repr[key] = datetime.isoformat(value)
-        return json.dumps(dict_repr, indent=2)
+from .base import IsValid, Base
 
 
 class Menu(IsValid, Base):
@@ -99,7 +50,7 @@ class Menu(IsValid, Base):
         url = self.url if self.url else ""
         return f"{self.id:03d} - {self.name:<32} {url:<32} "
 
-    def __eq__(self, other: any):
+    def __eq__(self, other: object):
         if not other:
             return False
         if isinstance(other, Menu):
@@ -108,7 +59,7 @@ class Menu(IsValid, Base):
             return self.id == other
         return False
 
-    def __lt__(self, other: any):
+    def __lt__(self, other: object):
         if not other:
             return False
         if isinstance(other, Menu):

@@ -3,9 +3,10 @@
 # pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument)
 """Module File"""
 
-from datetime import date
-from re import sub as regex_substitute
 from typing import Optional, Self
+import re
+from datetime import date
+from dateutil.relativedelta import relativedelta
 import reflex as rx
 from sqlalchemy import (
     String,
@@ -15,15 +16,13 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     UniqueConstraint,
+    Index,
 )
 from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
-import sqlmodel
 from . import (
     Base,
     Name,
-    NameModel,
     SimpleTable,
-    SimpleTableModel,
     ContDocID,
     PersonType,
 )
@@ -37,22 +36,10 @@ STOP_CHARS = "[.-/_]"
 DEFAULT_NAME_FIELD_SIZE = 256
 
 
-class MaritalStatusModel(SimpleTableModel, rx.Model):
-    """Base class User"""
-
-    __tablename__ = "marital_status"
-
-
 class MaritalStatus(SimpleTable):
     """Base class User"""
 
     __tablename__ = "marital_status"
-
-
-class GenderModel(SimpleTableModel, rx.Model):
-    """Base class User"""
-
-    __tablename__ = "gender"
 
 
 class Gender(SimpleTable):
@@ -61,28 +48,10 @@ class Gender(SimpleTable):
     __tablename__ = "gender"
 
 
-class EducationModel(SimpleTableModel, rx.Model):
-    """Base class User"""
-
-    __tablename__ = "education"
-
-
 class Education(SimpleTable):
     """Base class User"""
 
     __tablename__ = "education"
-
-
-class TitleModel(NameModel, rx.Model):
-    """Title class table"""
-
-    __tablename__ = "title"
-    gender_id: Optional[int] = sqlmodel.Field(foreign_key="gender.id", nullable=True)
-    shortening: str
-    gender: Optional[GenderModel] = sqlmodel.Relationship(
-        sa_relationship=relationship(lazy="immediate")
-    )
-    __table_args__ = (sqlmodel.UniqueConstraint("name", "gender_id"),)
 
 
 class Title(Name):
@@ -95,28 +64,6 @@ class Title(Name):
     shortening: Mapped[str] = mapped_column(String(32), sort_order=4)
     gender: Mapped[Optional[Gender]] = relationship(lazy="immediate")
     __table_args__ = (UniqueConstraint("name", "gender_id"),)
-
-
-class ContactDocumentModel(SimpleTableModel, rx.Model):
-    """Base class User"""
-
-    __tablename__ = "contact_document"
-    mask: Optional[str]
-    allow_login: bool = sqlmodel.Field(False)
-    validation_regex: Optional[str]
-    sub_regex: Optional[str]
-    contdoc_type: str
-    person_type: Optional[str]
-
-    def __str__(self):
-        return (
-            super().__str__()
-            + f", 'mask': {self.mask}, 'allow_origim': {self.allow_login}"
-            + f", 'validation_regex': {self.validation_regex} "
-            + f", 'sub_regex': {self.sub_regex} "
-            + f", 'contdoc_type': {self.contdoc_type} "
-            + f", 'person_type': {self.person_type} "
-        )
 
 
 class ContactDocument(SimpleTable):
@@ -147,27 +94,6 @@ class ContactDocument(SimpleTable):
         )
 
 
-class UserContactDocumentModel(rx.Model):
-    """Relationship table user <---> contact_document"""
-
-    __tablename__ = "user_contact_document"
-    user_id: int = sqlmodel.Field(
-        foreign_key="users.id",
-        ondelete="CASCADE",
-        primary_key=True,
-    )
-    contdoc_id: int = sqlmodel.Field(foreign_key="contact_document.id", primary_key=True)
-    name: str = sqlmodel.Field(index=True, primary_key=True)
-    is_main: bool = sqlmodel.Field(False)
-    user: "UserModel" = sqlmodel.Relationship(back_populates="contact_document")
-    contdoc: ContactDocumentModel = sqlmodel.Relationship(
-        sa_relationship=relationship(
-            lazy="joined",
-            innerjoin=True,
-        ),
-    )
-
-
 class UserContactDocument(Base):
     """Relationship table user <---> contact_document"""
 
@@ -190,7 +116,7 @@ class UserContactDocument(Base):
     def validate_name(self, key: str, field: str):
         """validate contdoc field"""
         if self.contdoc and isinstance(self.contdoc, ContactDocument) and self.contdoc.sub_regex:
-            field = regex_substitute(self.contdoc.sub_regex, "", field)
+            field = re.sub(self.contdoc.sub_regex, "", field)
         return field
 
     def __str__(self):
@@ -200,56 +126,19 @@ class UserContactDocument(Base):
         )
 
 
-class UserModel(NameModel, rx.Model):
-    """Base class User"""
-
-    __tablename__ = "users"
-    __mapper_args__ = {
-        "polymorphic_identity": "users",
-        "polymorphic_on": "person_type",
-    }
-    nick_name: Optional[str] = sqlmodel.Field(index=True)
-    birthdate: date
-    person_type: str
-    contact_document: Optional[list[UserContactDocumentModel]] = sqlmodel.Relationship(
-        sa_relationship=relationship(
-            back_populates="user",
-            lazy="joined",
-            innerjoin=False,
-        )
-    )
-
-    def add(self, new_item: UserContactDocumentModel) -> Self:
-        """add a document or contact to a user"""
-        if not self.contact_document:
-            self.contact_document = []
-        new_item.user = self
-        new_item.user_id = self.id
-        self.contact_document.append(new_item)
-        return self
-
-    def __str__(self):
-        return f"User(type={self.person_type}, birthdate={self.birthdate}, {super().__str__()}"
-
-    @property
-    def email(self) -> str:
-        """Get the email of the user"""
-        for item in self.contact_document:
-            if item.contdoc and item.contdoc_id == ContDocID.EMAIL.value:
-                return item.name
-        return ""
-
-
 class User(Name):
     """Base class User"""
 
     __tablename__ = "users"
-    __table_args__ = {
-        "comment": (
-            "This table uses plural in order to do not "
-            "conflict with user reserved word in some databases."
-        )
-    }
+    __table_args__ = (
+        {
+            "comment": (
+                "This table uses plural in order to do not "
+                "conflict with user reserved word in some databases."
+            )
+        },
+        Index("ix_users_name", "name"),
+    )
     __mapper_args__ = {
         "polymorphic_identity": "users",
         "polymorphic_on": "person_type",
@@ -273,8 +162,6 @@ class User(Name):
 
     contact_document: Mapped[Optional[list[UserContactDocument]]] = relationship(
         back_populates="user",
-        lazy="joined",
-        innerjoin=False,
     )
 
     def add(self, new_item: UserContactDocument) -> Self:
@@ -292,41 +179,22 @@ class User(Name):
     @property
     def email(self) -> str:
         """Get the email of the user"""
-        for item in self.contact_document:
+        for item in self.contact_document or []:
             if item.contdoc and item.contdoc_id == ContDocID.EMAIL.value:
                 return item.name
         return ""
 
-
-class PersonModel(UserModel, rx.Model):
-    """Base class Person"""
-
-    __tablename__ = "person"
-    __mapper_args__ = {
-        "polymorphic_identity": PersonType.PERSON.value,
-    }
-    id: int = sqlmodel.Field(foreign_key="users.id", ondelete="CASCADE", primary_key=True)
-    gender_id: Optional[int] = sqlmodel.Field(foreign_key="gender.id")
-    title_id: Optional[int] = sqlmodel.Field(foreign_key="title.id")
-    marital_status_id: Optional[int] = sqlmodel.Field(foreign_key="marital_status.id")
-    education_id: Optional[int] = sqlmodel.Field(foreign_key="education.id")
-    title: Optional[Title] = sqlmodel.Relationship()
-    maritalstatus: Optional[MaritalStatus] = sqlmodel.Relationship()
-    gender: Optional[Gender] = sqlmodel.Relationship()
-    education: Optional[Education] = sqlmodel.Relationship()
+    @property
+    def formatted_birthdate(self) -> str:
+        """Get the birthdate of the user in a formatted string"""
+        return self.birthdate.strftime("%d/%m/%Y") if self.birthdate else ""
 
     @property
-    def cpf(self) -> str:
-        """Get the email of the user"""
-        for item in self.contact_document:
-            if item.contdoc and item.contdoc.id == ContDocID.CPF.value:
-                return item.name
-        return ""
-
-    @property
-    def first_name(self) -> str:
-        """Get the email of the user"""
-        return self.nickname or self.name.split(" ")[0]
+    def age(self) -> Optional[int]:
+        """Calculate the age of the user based on the birthdate"""
+        if self.birthdate:
+            return relativedelta(date.today(), self.birthdate).years
+        return None
 
 
 class Person(User):
@@ -361,10 +229,16 @@ class Person(User):
     @property
     def cpf(self) -> str:
         """Get the identity/document of the user"""
-        for item in self.contact_document:
+        for item in self.contact_document or []:
             if item.contdoc and item.contdoc.id == ContDocID.CPF.value:
                 return item.name
         return ""
+
+    @property
+    def formatted_cpf(self) -> str:
+        """Get the formatted CPF of the user"""
+        value = self.cpf or "0"
+        return re.sub(r"(\d{3})(\d{3})(\d{3})(\d{2})", r"\1.\2.\3-\4", value.zfill(11))
 
     @property
     def identity(self) -> str:
@@ -375,34 +249,6 @@ class Person(User):
     def first_name(self) -> str:
         """Get the email of the user"""
         return self.nick_name or self.name.split(" ")[0]
-
-
-class CompanyModel(UserModel, rx.Model):
-    """Base class Company"""
-
-    __tablename__ = "company"
-    __mapper_args__ = {
-        "polymorphic_identity": PersonType.COMPANY.value,
-    }
-
-    id: int = sqlmodel.Field(foreign_key="users.id", primary_key=True)
-
-    @validates("cnpj")
-    def validate_cnpj(self, key, field: str) -> str:
-        """validate CPF"""
-        if field:
-            field = regex_substitute(STOP_CHARS, "", field)
-            field = field.zfill(CNPJ_SIZE)
-            return field
-        raise ValueError("CPF could not be null")
-
-    @property
-    def cnpj(self) -> str:
-        """Get the email of the user"""
-        for item in self.contact_document:
-            if item.contdoc and item.contdoc.id == 7:
-                return item.name
-        return ""
 
 
 class Company(User):
@@ -419,7 +265,7 @@ class Company(User):
     def validate_cnpj(self, key, field: str) -> str:
         """validate CPF"""
         if field:
-            field = regex_substitute(STOP_CHARS, "", field)
+            field = re.sub(STOP_CHARS, "", field)
             field = field.zfill(CNPJ_SIZE)
             return field
         raise ValueError("CPF could not be null")
@@ -427,7 +273,7 @@ class Company(User):
     @property
     def cnpj(self) -> str:
         """Get the email of the user"""
-        for item in self.contact_document:
+        for item in self.contact_document or []:
             if item.contdoc and item.contdoc.id == 7:
                 return item.name
         return ""

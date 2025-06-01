@@ -32,4 +32,5 @@ config = rx.Config(
     pool_pre_ping="true",
     pool_size="30",
     max_overflow="5",
+    tailwind=None,
 )

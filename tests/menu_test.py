@@ -41,10 +41,12 @@ def get_menu(session) -> Tree:
 
 
 def create_sub_menu_item(menu_data: dict):
+    """Create a sub menu item."""
     return rx.menu.item({menu_data["name"]})
 
 
 def create_sub_menu(menu_data: dict, menu_list: list):
+    """Create a sub menu."""
     return rx.menu.sub(
         rx.menu.sub_trigger(menu_data["name"]),
         rx.menu.sub_content(menu_list),
@@ -52,6 +54,7 @@ def create_sub_menu(menu_data: dict, menu_list: list):
 
 
 def create_menu(menu_tree: Tree, nodes: list[Node] | None = None, level: int = 0) -> list:
+    """Create a menu structure from the menu tree."""
     if not nodes:
         nodes = menu_tree.children("root")
     menu_child_list: list | None = None

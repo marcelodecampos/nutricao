@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 """login entity modules"""
 
-from typing import Optional
 from datetime import datetime
 import bcrypt
-import reflex as rx
 from sqlalchemy import (
     BigInteger,
     ForeignKey,
@@ -18,17 +16,12 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
-import sqlmodel
-from sqlmodel import Field, Relationship
 from utils.logger import get_logger
 from . import (
     Base,
     InsertDate,
     InsertUpdateDate,
     User,
-    InsertDateModel,
-    InsertUpdateDateModel,
-    UserModel,
 )
 
 
@@ -39,18 +32,6 @@ login_fk = ForeignKey(
     "login.user_id",
     ondelete="CASCADE",
 )
-
-
-class LoginModel(InsertUpdateDateModel, rx.Model):
-    """login"""
-
-    __tablename__ = "login"
-    user_id: Optional[int] = Field(default=None, foreign_key="users.id", primary_key=True)
-    password: Optional[str] = Field(default=None)
-    attempts: Optional[int] = Field(0)
-    locked: Optional[bool] = Field(False)
-    password_expires: Optional[datetime] = Field(default=datetime.now())
-    user: UserModel = Relationship(sa_relationship=relationship(lazy="immediate"))
 
 
 class Login(InsertUpdateDate):
@@ -97,19 +78,6 @@ class Login(InsertUpdateDate):
         return hashed_password.decode()
 
 
-class LoginAuditModel(InsertDateModel, rx.Model):
-    """class audit login"""
-
-    __tablename__ = "login_audit"
-    user_id: int = (Field(foreign_key="login.user_id", ondelete="CASCADE"),)
-    ip_address: str
-    login: LoginModel = Relationship(sa_relationship=relationship(lazy="immediate"))
-    __table_args__ = (
-        sqlmodel.PrimaryKeyConstraint("user_id", "time_created"),
-        sqlmodel.Index("time_created"),
-    )
-
-
 class LoginAudit(InsertDate, Base):
     """class audit login"""
 
@@ -138,13 +106,3 @@ class LastUsedPasswords(InsertDate, Base):
     login: Mapped["Login"] = relationship(lazy="immediate")
     __pk = PrimaryKeyConstraint("user_id", "password")
     __table_args__ = (__pk,)
-
-
-class LastUsedPasswordsModel(InsertDateModel, rx.Model):
-    """class Last Used"""
-
-    __tablename__ = "last_used_password"
-    user_id: int = Field(foreign_key="login.user_id", ondelete="CASCADE")
-    password: str
-    login: LoginModel = Relationship(sa_relationship=relationship(lazy="immediate"))
-    __table_args__ = (sqlmodel.PrimaryKeyConstraint("user_id", "password"),)

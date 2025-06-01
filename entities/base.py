@@ -5,13 +5,11 @@
 
 import json
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Self
 from functools import total_ordering
-import reflex as rx
 from sqlalchemy import DateTime, Integer, String, Boolean, BigInteger, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
 from sqlalchemy.sql import func
-import sqlmodel
 from utils.logger import get_logger
 
 # Create a PostgreSQL database engine
@@ -33,33 +31,6 @@ class Base(DeclarativeBase):
     #             setattr(self, key, value)
 
 
-class SerialIDModel(rx.Model):
-    """Abstract class to implement a serial id on almost every table"""
-
-    id: Optional[int] = sqlmodel.Field(primary_key=True)
-
-    def __str__(self):
-        return f"User(id={self.id})"
-
-    def __eq__(self, other: any):
-        if not other:
-            return False
-        if isinstance(other, SerialID):
-            return self.id == other.id
-        if isinstance(other, (int | Integer | BigInteger)):
-            return self.id == other
-        return False
-
-    def __lt__(self, other: any):
-        if not other:
-            return False
-        if isinstance(other, SerialID):
-            return self.id < other.id
-        if isinstance(other, (int | Integer | BigInteger)):
-            return self.id < other
-        return False
-
-
 @total_ordering
 class SerialID(Base):
     """Abstract class to implement a serial id on almost every table"""
@@ -71,7 +42,7 @@ class SerialID(Base):
     def __str__(self):
         return f"User(id={self.id})"
 
-    def __eq__(self, other: any):
+    def __eq__(self, other: object | int | Integer | BigInteger):
         if not other:
             return False
         if isinstance(other, SerialID):
@@ -80,7 +51,7 @@ class SerialID(Base):
             return self.id == other
         return False
 
-    def __lt__(self, other: any):
+    def __lt__(self, other: Self | int | Integer | BigInteger):
         if not other:
             return False
         if isinstance(other, SerialID):
@@ -97,12 +68,6 @@ class SerialID(Base):
         return json.dumps(dict_repr, indent=2)
 
 
-class InsertDateModel(rx.Model):
-    """Abstract class to implement an insert date and update date on almost every table"""
-
-    time_created: Optional[datetime] = sqlmodel.Field(datetime.now(), nullable=True)
-
-
 class InsertDate:
     """Abstract class to implement an insert date and update date on almost every table"""
 
@@ -112,12 +77,6 @@ class InsertDate:
         server_default=func.now(),  # pylint: disable=not-callable
         sort_order=98,
     )
-
-
-class InsertUpdateDateModel(InsertDateModel, rx.Model):
-    """Abstract class to implement an insert date and update date on almost every table"""
-
-    time_updated: Optional[datetime]
 
 
 class InsertUpdateDate(InsertDate, Base):
@@ -131,12 +90,6 @@ class InsertUpdateDate(InsertDate, Base):
         onupdate=func.now(),  # pylint: disable=not-callable
         sort_order=99,
     )
-
-
-class NameModel(SerialIDModel, InsertUpdateDateModel, rx.Model):
-    """Abstract class to implement a name on almost every table"""
-
-    name: str
 
 
 class Name(SerialID, InsertUpdateDate):
@@ -162,22 +115,10 @@ class UniqueNameMixin:
     __table_args__ = (UniqueConstraint("name"),)
 
 
-class UniqNameModel(UniqueNameMixin, NameModel):
-    """Abstract class to implement a name on almost every table"""
-
-    __abstract__ = True
-
-
 class UniqName(UniqueNameMixin, Name):
     """Abstract class to implement a name on almost every table"""
 
     __abstract__ = True
-
-
-class IsValidModel(rx.Model):
-    """IsValid mixin class"""
-
-    is_valid: Mapped[bool] = sqlmodel.Field(True)
 
 
 class IsValid:
@@ -189,10 +130,6 @@ class IsValid:
         server_default="t",
         sort_order=97,
     )
-
-
-class SimpleTableModel(IsValidModel, UniqNameModel, rx.Model):
-    """Abstract class to implement a name on almost every table"""
 
 
 class SimpleTable(IsValid, UniqName):

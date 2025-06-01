@@ -14,34 +14,12 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import reflex as rx
-import sqlmodel
 from . import (
     SimpleTable,
     Name,
     SerialID,
     InsertUpdateDate,
-    SimpleTableModel,
-    NameModel,
-    SerialIDModel,
-    InsertUpdateDateModel,
 )
-
-
-class CountryModel(SimpleTableModel, rx.Model):
-    """Iso country codes and International name"""
-
-    __tablename__ = "country"
-    alpha_2: str
-    alpha_3: str
-    country_code: str
-    iso_3166_2: str
-    region: Optional[str]
-    sub_region: Optional[str]
-    intermediate_region: Optional[str]
-    region_code: Optional[str]
-    sub_region_code: Optional[str]
-    intermediate_region_code: Optional[str]
 
 
 class Country(SimpleTable):
@@ -68,18 +46,6 @@ class Country(SimpleTable):
     )
 
 
-class StateModel(SimpleTableModel, rx.Model):
-    """Brazil: unidade de federacao"""
-
-    __tablename__ = "state"
-    shortening: str = sqlmodel.Field(unique=True)
-    code: int = sqlmodel.Field(unique=True)
-    latitude: Decimal
-    longitude: Decimal
-    country_id: int = sqlmodel.Field(foreign_key="country.id")
-    country: CountryModel = sqlmodel.Relationship()
-
-
 class State(SimpleTable):
     """Brazil: unidade de federacao"""
 
@@ -93,20 +59,6 @@ class State(SimpleTable):
     country: Mapped[Country] = relationship()
 
 
-class CityModel(NameModel, rx.Model):
-    """Brazil: municipio"""
-
-    __tablename__ = "city"
-
-    code: str
-    state_id: int = sqlmodel.Field(foreign_key="state.code")
-    state: State = sqlmodel.Relationship()
-    __table_args__ = (
-        sqlmodel.UniqueConstraint("state_id", "code", name="uk_city_code_state_id"),
-        sqlmodel.Index("ix_city_name", "name"),
-    )
-
-
 class City(Name):
     """Brazil: municipio"""
 
@@ -118,18 +70,6 @@ class City(Name):
         UniqueConstraint("state_id", "code", name="uk_city_code_state_id"),
         Index("ix_city_name", "name"),
     )
-
-
-class AddressModel(SerialIDModel, InsertUpdateDateModel, rx.Model):
-    """address table"""
-
-    __tablename__ = "address"
-    address: str
-    complement: Optional[str]
-    district: Optional[str]
-    zip_code: Optional[str]
-    city_id: int = sqlmodel.Field(foreign_key="city.id")
-    city: CityModel = sqlmodel.Relationship()
 
 
 class Address(SerialID, InsertUpdateDate):
