@@ -1,8 +1,9 @@
 #!  python3
 # -*- coding: utf-8 -*-
-# pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument)
+# pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument, logging-fstring-interpolation)
 """Module File"""
 
+import logging
 from typing import Optional, Self
 import re
 from datetime import date
@@ -32,7 +33,8 @@ TYPE_PERSON_CHECK_CONSTRAINT = CheckConstraint("person_type IN ('F', 'J', NULL)"
 CONTDOC_CHECK_CONSTRAINT = CheckConstraint("contdoc_type IN ('C', 'D')")
 CPF_SIZE = 11
 CNPJ_SIZE = 14
-STOP_CHARS = "[.-/_]"
+STOP_CHARS = r"\D+"
+EMAIL_REGEX = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
 DEFAULT_NAME_FIELD_SIZE = 256
 
 
@@ -129,16 +131,9 @@ class UserContactDocument(Base):
 class User(Name):
     """Base class User"""
 
+    __logger = logging.getLogger(__name__)
     __tablename__ = "users"
-    __table_args__ = (
-        {
-            "comment": (
-                "This table uses plural in order to do not "
-                "conflict with user reserved word in some databases."
-            )
-        },
-        Index("ix_users_name", "name"),
-    )
+    __table_args__ = (Index("ix_users_name", "name"),)
     __mapper_args__ = {
         "polymorphic_identity": "users",
         "polymorphic_on": "person_type",
@@ -153,6 +148,12 @@ class User(Name):
         Date(),
         nullable=True,
         sort_order=4,
+    )
+    email: Mapped[Optional[str]] = mapped_column(
+        String(DEFAULT_NAME_FIELD_SIZE),
+        nullable=True,
+        unique=True,
+        sort_order=2,
     )
     person_type: Mapped[str] = mapped_column(
         CHAR,
@@ -177,14 +178,6 @@ class User(Name):
         return f"User(type={self.person_type}, birthdate={self.birthdate}, {super().__str__()}"
 
     @property
-    def email(self) -> str:
-        """Get the email of the user"""
-        for item in self.contact_document or []:
-            if item.contdoc and item.contdoc_id == ContDocID.EMAIL.value:
-                return item.name
-        return ""
-
-    @property
     def formatted_birthdate(self) -> str:
         """Get the birthdate of the user in a formatted string"""
         return self.birthdate.strftime("%d/%m/%Y") if self.birthdate else ""
@@ -196,10 +189,25 @@ class User(Name):
             return relativedelta(date.today(), self.birthdate).years
         return None
 
+    @validates("email")
+    def validate_email(self, key, field: str) -> str:
+        """validate email"""
+        self.__logger.debug(f"Validating email: {key}-{field}")
+        if not field:
+            errmsg = "E-mail could not be null"
+            self.__logger.error(errmsg)
+            raise ValueError(errmsg)
+        if not re.fullmatch(EMAIL_REGEX, field):
+            errmsg = f"Invalid e-mail format: {field}"
+            self.__logger.error(errmsg)
+            raise ValueError(errmsg)
+        return field.strip().lower()
+
 
 class Person(User):
     """Base class Person"""
 
+    __logger = logging.getLogger(__name__)
     __tablename__ = "person"
     __mapper_args__ = {
         "polymorphic_identity": PersonType.PERSON.value,
@@ -207,6 +215,12 @@ class Person(User):
 
     id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), sort_order=1, primary_key=True
+    )
+    cpf: Mapped[Optional[str]] = mapped_column(
+        String(CPF_SIZE),
+        nullable=True,
+        unique=True,
+        sort_order=4,
     )
     gender_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("gender.id"), sort_order=5, nullable=True
@@ -227,21 +241,13 @@ class Person(User):
     education: Mapped[Optional[Education]] = relationship()
 
     @property
-    def cpf(self) -> str:
-        """Get the identity/document of the user"""
-        for item in self.contact_document or []:
-            if item.contdoc and item.contdoc.id == ContDocID.CPF.value:
-                return item.name
-        return ""
-
-    @property
     def formatted_cpf(self) -> str:
         """Get the formatted CPF of the user"""
         value = self.cpf or "0"
         return re.sub(r"(\d{3})(\d{3})(\d{3})(\d{2})", r"\1.\2.\3-\4", value.zfill(11))
 
     @property
-    def identity(self) -> str:
+    def identity(self) -> str | None:
         """Get the identity/document of the user"""
         return self.cpf
 
@@ -249,6 +255,15 @@ class Person(User):
     def first_name(self) -> str:
         """Get the email of the user"""
         return self.nick_name or self.name.split(" ")[0]
+
+    @validates("cpf")
+    def validate_cpf(self, key, field: str) -> str:
+        """validate CPF"""
+        self.__logger.debug(f"Validating CPF: {key}-{field}")
+        if field:
+            field = re.sub(STOP_CHARS, "", field).zfill(CPF_SIZE)
+            return field
+        raise ValueError("CPF could not be null")
 
 
 class Company(User):
@@ -260,20 +275,17 @@ class Company(User):
     }
 
     id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True, sort_order=3)
+    cnpj: Mapped[Optional[str]] = mapped_column(
+        String(CNPJ_SIZE),
+        nullable=True,
+        unique=True,
+        sort_order=4,
+    )
 
     @validates("cnpj")
     def validate_cnpj(self, key, field: str) -> str:
         """validate CPF"""
         if field:
-            field = re.sub(STOP_CHARS, "", field)
-            field = field.zfill(CNPJ_SIZE)
+            field = re.sub(STOP_CHARS, "", field).zfill(CNPJ_SIZE)
             return field
-        raise ValueError("CPF could not be null")
-
-    @property
-    def cnpj(self) -> str:
-        """Get the email of the user"""
-        for item in self.contact_document or []:
-            if item.contdoc and item.contdoc.id == 7:
-                return item.name
-        return ""
+        raise ValueError("CNPJ could not be null")

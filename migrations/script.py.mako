@@ -1,3 +1,4 @@
+# pylint: disable=not-callable, missing-class-docstring, missing-function-docstring, too-few-public-methods, no-member
 """${message}
 
 Revision ID: ${up_revision}
@@ -5,8 +6,8 @@ Revises: ${down_revision | comma,n}
 Create Date: ${create_date}
 
 """
-import sqlalchemy as sa
 from typing import Sequence, Union
+import sqlalchemy as sa
 
 from sqlalchemy.orm import Session
 from alembic import op

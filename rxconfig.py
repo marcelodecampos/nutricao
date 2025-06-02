@@ -11,7 +11,7 @@ url_object = URL.create(
     username="postgres",
     password="Curiosity killed the cat",  # plain (unescaped) text
     host="db.local",
-    database="minhanutri",
+    database="allsystems",
     query={
         "application_name": "reflex",
     },

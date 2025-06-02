@@ -1,3 +1,5 @@
+# pylint: disable=not-callable, missing-class-docstring, missing-function-docstring, too-few-public-methods, no-member
+
 """Inserting fake data into database for testing purpose
 
 Revision ID: 6b6a1934df47
@@ -16,30 +18,35 @@ from entities import Person, UserContactDocument, ContactDocument, Login
 
 # revision identifiers, used by Alembic.
 revision: str = "6b6a1934df47"
-down_revision: Union[str, None] = "90c82e943507"
+down_revision: Union[str, None] = "01b7ee9b5f55"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+emails_dict = {}
+cpfs_dict = {}
+
 
 def add_person(session, faker: Faker, male: bool, nonbinary: bool = False) -> Person:
+    faker_email = faker.email(False)
+    cpf = faker.cpf()
+    name = (
+        faker.name_nonbinary() if nonbinary else faker.name_male() if male else faker.name_female()
+    )
+    while faker_email in emails_dict:
+        faker_email = faker.email(False)
+    emails_dict[faker_email] = name
+    while cpf in cpfs_dict:
+        cpf = faker.cpf()
+    cpfs_dict[cpf] = name
     person = Person(
-        name=faker.name_nonbinary()
-        if nonbinary
-        else faker.name_male()
-        if male
-        else faker.name_female(),
+        name=name,
         birthdate=faker.date(),
         education_id=faker.random_int(min=1, max=10),
         title_id=2 if male else 3,
         gender_id=3 if nonbinary else 1 if male else 2,
         marital_status_id=faker.random_int(min=1, max=5),
-    )
-    person.add(
-        UserContactDocument(
-            contdoc=session.get(ContactDocument, 1),
-            name=faker.cpf(),
-            is_main=True,
-        )
+        cpf=cpf,
+        email=faker_email,
     )
     person.add(
         UserContactDocument(
@@ -55,13 +62,6 @@ def add_person(session, faker: Faker, male: bool, nonbinary: bool = False) -> Pe
             is_main=True,
         )
     )
-    person.add(
-        UserContactDocument(
-            contdoc=session.get(ContactDocument, 10),
-            name=faker.email(),
-            is_main=True,
-        )
-    )
     return person
 
 
@@ -70,17 +70,17 @@ def upgrade() -> None:
     faker_data = Faker("pt_BR")
     session: Session = Session(bind=op.get_bind())
     entities = list()
-    for loop in range(20_000):
+    for loop in range(200_000):
         male = add_person(session, faker_data, True)
         entities.append(male)
-        famale = add_person(session, faker_data, False)
-        entities.append(famale)
+        female = add_person(session, faker_data, False)
+        entities.append(female)
         if loop % 100 == 0:
             entities.append(add_person(session, faker_data, False, True))
             print(f"Contando: {loop:04}")
         if loop % 300 == 0:
             entities.append(Login(user=male, password="123456"))
-            entities.append(Login(user=famale, password="123456"))
+            entities.append(Login(user=female, password="123456"))
         if loop % 10000 == 0:
             print(f"Commiting all: {loop:04} - {datetime.now().strftime('%Y/%m/%d, %H:%M:%S')}")
     print(f"entities has {len(entities)} items")

@@ -1,4 +1,6 @@
-"""Load Food Group into Database
+# pylint: disable=not-callable, missing-class-docstring, missing-function-docstring, too-few-public-methods, no-member
+
+"""Initial load data
 
 Revision ID: 01b7ee9b5f55
 Revises: 37117391b8b6
@@ -33,7 +35,7 @@ from entities import (
 
 # revision identifiers, used by Alembic.
 revision: str = "01b7ee9b5f55"
-down_revision: Union[str, None] = "37117391b8b6"
+down_revision: Union[str, None] = "68879994ba42"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -77,26 +79,11 @@ def load_gender(session) -> None:
 def load_contact_document(session) -> None:
     """Upgrade schema."""
     entitites = (
-        ContactDocument(
-            name="CPF",
-            allow_login=True,
-            mask="999.999.999-99",
-            contdoc_type="D",
-            sub_regex="[^0-9]",
-        ),
         ContactDocument(name="Passaporte", contdoc_type="D", person_type="F"),
         ContactDocument(name="Identidade", contdoc_type="D", person_type="F"),
         ContactDocument(name="PIS/PASEP", contdoc_type="D", person_type="F"),
         ContactDocument(name="Tit. Eleitor", contdoc_type="D", person_type="F"),
         ContactDocument(name="Certidão de Nascimento", contdoc_type="D", person_type="F"),
-        ContactDocument(
-            name="CNPJ",
-            allow_login=True,
-            mask="99.999.999/9999-99",
-            contdoc_type="D",
-            person_type="J",
-            sub_regex="[^0-9]",
-        ),
         ContactDocument(
             name="Celular",
             allow_login=False,
@@ -111,11 +98,6 @@ def load_contact_document(session) -> None:
             sub_regex="[^0-9]",
         ),
         ContactDocument(
-            name="e-mail",
-            allow_login=True,
-            contdoc_type="C",
-        ),
-        ContactDocument(
             name="InscricaoEstadual",
             allow_login=False,
             contdoc_type="D",
@@ -128,7 +110,7 @@ def load_contact_document(session) -> None:
             person_type="J",
         ),
         ContactDocument(
-            name="InscricaoEstadual",
+            name="InscricaoJuntaComercial",
             allow_login=False,
             contdoc_type="D",
             person_type="J",
@@ -335,10 +317,8 @@ def load_food(session) -> None:
 
 def load_person(session) -> None:
     """Upgrade schema."""
-    contdoc_type_cpf = session.get(ContactDocument, 1)
     contdoc_type_gc = session.get(ContactDocument, 3)
     contdoc_type_cell = session.get(ContactDocument, 8)
-    contdoc_type_email = session.get(ContactDocument, 10)
     marcelo = Person(
         name="marcelo de campos",
         birthdate="1973-10-14",
@@ -346,13 +326,8 @@ def load_person(session) -> None:
         title_id=4,
         gender_id=1,
         marital_status_id=4,
-    )
-    marcelo.add(
-        UserContactDocument(
-            contdoc=contdoc_type_cpf,
-            name="594.693.904-15",
-            is_main=True,
-        )
+        cpf="594.693.904-15",
+        email="sr.marcelo.campos@gmail.com",
     )
     marcelo.add(
         UserContactDocument(
@@ -364,44 +339,31 @@ def load_person(session) -> None:
     marcelo.add(
         UserContactDocument(
             contdoc=contdoc_type_cell,
-            name="(61) 984017586)",
-            is_main=True,
-        )
-    )
-    marcelo.add(
-        UserContactDocument(
-            contdoc=contdoc_type_email,
-            name="marcelo@cnj.jus.br",
-            is_main=True,
-        )
-    )
-    marcelo.add(
-        UserContactDocument(
-            contdoc=contdoc_type_email,
-            name="sr.marcelo.campos@gmail.com",
+            name="(61) 984017586",
             is_main=True,
         )
     )
     leila = Person(
-        name="Cármen Leila da Costa Terra das Neves",
+        name="Carmen Leila da Costa Terra das Neves",
         birthdate="1977-07-27",
         education_id=6,
         title_id=5,
         gender_id=2,
         marital_status_id=3,
+        cpf="490.250.662-91",
+        email="leilatneves@gmail.com",
     )
-    leila.add(UserContactDocument(contdoc=contdoc_type_cpf, name="490.250.662-91", is_main=True))
     p_01 = (
         marcelo,
         leila,
-        Person(name="Helena Azevedo de Campos", birthdate="2009-11-20"),
+        Person(name="Helena Azevedo de Campos", birthdate="2009-11-20", cpf="09256790105"),
         Person(name="Fernanda Terra das Neves Marra da Silveira", birthdate="2004-08-07"),
         Person(
             name="Júlia Terra das Neves Marra da Silveira",
             birthdate="2000-03-22",
         ),
         Person(
-            name="bárbara Terra das Neves Marra da Silveira",
+            name="ANNA bárbara Terra das Neves Marra da Silveira",
         ),
     )
     session.add_all(p_01)

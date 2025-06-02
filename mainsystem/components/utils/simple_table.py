@@ -34,20 +34,24 @@ class SimpleTableState(AppState):
     @rx.event
     async def handle_delete_records(self):
         """Handle the deletion of selected records."""
-        self._logger.debug("Deleting selected records in the simple table. {self.selected_items}")
+        count = [key for key, value in self.selected_items.items() if value is True]
+        itens_to_delete = [self.data[index][1] for index in count]
+        self._logger.debug(f"Deleting selected records in the simple table. {itens_to_delete}")
         yield rx.toast.info("All selected records will be deleted.")
 
     @rx.event
     async def handle_id_select_all(self):
         """Handle the selection of all IDs."""
         self._logger.debug("Selecting all IDs in the simple table.")
-        yield rx.toast.info("Select all IDs is not implemented yet.")
+        self.selected_items = {index: True for index, item in enumerate(self.data)}
+        self._logger.debug(f"{self.selected_items}")
 
     @rx.event
     async def handle_id_select_none(self):
         """Handle the selection of no IDs."""
         self._logger.debug("Selecting no IDs in the simple table.")
-        yield rx.toast.info("Select no IDs is not implemented yet.")
+        self.selected_items = {}
+        self._logger.debug(f"{self.selected_items}")
 
     @rx.event
     async def handle_id_select_invert(self):
@@ -59,7 +63,8 @@ class SimpleTableState(AppState):
         """Execute a SQL query and return the results."""
         entity = table_definition.get("entity", None)
         if not entity:
-            errmsg = f"{entity.__name__} entity is not defined in the table definition."
+            entityname = entity.__name__ or ""
+            errmsg = f"{entityname} entity is not defined in the table definition."
             raise ValueError(errmsg)
         self._logger.debug(f"loading entity: {entity}")
         with rx.session() as session:
@@ -129,10 +134,11 @@ class SimpleTableState(AppState):
     @rx.var
     def is_multiple_select(self) -> bool:
         """Check if the simple table supports multiple selection."""
-        return self.multiple_select and len(self.selected_items) > 0
+        count = [item for item in self.selected_items.values() if item is True]
+        return len(count) > 1
 
 
-def simple_table_id_column_header_cell() -> rx.Component:
+def simple_table_id_column_header_cell(table_definition: dict) -> rx.Component:
     """Return the ID cell component for the simple table."""
     return rx.table.column_header_cell(
         rx.menu.root(
@@ -140,7 +146,7 @@ def simple_table_id_column_header_cell() -> rx.Component:
                 rx.button(
                     "ID",
                     rx.icon("chevrons-down", size=20, stroke_width=1),
-                    variant="soft",
+                    variant=table_definition.get("header_button_variant", "soft"),
                     size="1",
                     spacing="0",
                     padding="0",
@@ -164,21 +170,22 @@ def simple_table_id_column_header_cell() -> rx.Component:
     )
 
 
-def simple_table_column_header_cell(column_header: dict) -> rx.Component:
+def simple_table_column_header_cell(column_header: dict, table_definition: dict) -> rx.Component:
     """Return the ID cell component for the simple table."""
-    field: str = column_header.get("field", None)
-    label: str = column_header.get("label", field)
+    field: str | None = column_header.get("field", None)
+    label: str | None = column_header.get("label", field)
     cell_width: str = column_header.get("width", "auto")
     return rx.table.column_header_cell(
         rx.button(
             label,
-            variant="soft",
+            variant=table_definition.get("header_button_variant", "solid"),
             size="1",
             spacing="0",
             padding="0",
             border="none",
             width="100%",
             height="100%",
+            align="left",
             id=f"simple-table-column-header-cell-button-{field}",
         ),
         spacing="0",
@@ -186,7 +193,7 @@ def simple_table_column_header_cell(column_header: dict) -> rx.Component:
         id=f"simple-table-header-cell-{field}",
         border="1px solid rgb(100, 100, 100)",
         width=cell_width,
-        align=column_header.get("align", "left"),
+        justify=column_header.get("justify", "start"),
     )
 
 
@@ -195,6 +202,7 @@ def simple_table_row_cell_id(index: int) -> rx.Component:
     return rx.table.cell(
         rx.checkbox(
             id="simple-table-cell-id-checkbox",
+            checked=SimpleTableState.selected_items.get(index, False),
             on_change=lambda value: SimpleTableState.handle_checkbox_on_change(value, index),
         ),
         id="simple-table-cell-id",
@@ -235,6 +243,28 @@ def simple_table_body() -> rx.Component:
     )
 
 
+def new_button() -> rx.Component:
+    """Create a new button for the simple table."""
+    return rx.button(
+        rx.icon("plus", size=20),
+        "Novo",
+        id="simple-table-new-record-button",
+        color_scheme="grass",
+        on_click=SimpleTableState.handle_create_record,
+    )
+
+
+def delete_button() -> rx.Component:
+    """Create a delete button for the simple table."""
+    return rx.button(
+        rx.icon("minus", size=20),
+        "Apagar",
+        id="simple-table-delete-records-button",
+        color_scheme="red",
+        on_click=SimpleTableState.handle_delete_records,
+    )
+
+
 def simple_table_component(table_definition: dict) -> rx.Component:
     """Create a simple table component."""
     if not table_definition:
@@ -253,37 +283,36 @@ def simple_table_component(table_definition: dict) -> rx.Component:
                 weight="light",
                 id="simple-table-heading",
             ),
-            rx.button(
-                rx.icon("plus", size=20),
-                "Novo Registro",
-                id="simple-table-new-record-button",
-                on_click=SimpleTableState.handle_create_record,
-            ),
-            rx.button(
-                rx.icon("minus", size=20),
-                "Excluir os Resgistros Selecionados",
-                id="simple-table-delete-records-button",
-                on_click=SimpleTableState.handle_create_record,
-                style={
-                    "visibility": rx.cond(SimpleTableState.is_multiple_select, "visible", "hidden")
-                },
+            rx.cond(
+                SimpleTableState.is_multiple_select,
+                (
+                    new_button(),
+                    delete_button(),
+                ),
+                (new_button(),),
             ),
             width="100%",
         ),
         rx.table.root(
             rx.table.header(
                 rx.table.row(
-                    rx.cond(SimpleTableState.multiple_select, simple_table_id_column_header_cell()),
+                    rx.cond(
+                        SimpleTableState.multiple_select,
+                        simple_table_id_column_header_cell(table_definition=table_definition),
+                    ),
                     rx.foreach(
                         SimpleTableState.columns,
-                        lambda col: simple_table_column_header_cell(col),
+                        lambda col: simple_table_column_header_cell(
+                            col, table_definition=table_definition
+                        ),
                     ),
+                    style={"position": "sticky", "top": "0", "zIndex": "1"},
                 ),
                 id="simple-table-header",
             ),
             simple_table_body(),
             width="100%",
-            height="400px",
+            height="100%",
             class_id="simple-table",
             size="1",
             id="simple-table-root",
@@ -291,18 +320,20 @@ def simple_table_component(table_definition: dict) -> rx.Component:
         on_mount=lambda: SimpleTableState.handle_table_definition(
             table_definition=table_definition
         ),  # pylnt: disable=no-value-for-parameter
+        height="100vh",
     )
 
 
 def test_simple_table() -> rx.Component:
     """Test the simple_table function."""
+
     json_table_definition = {
         "data": [],
         "columns": [
             {
                 "field": "formatted_cpf",
                 "label": "CPF",
-                "width": "150px",
+                "width": "110px",
             },
             {
                 "field": "name",
@@ -318,7 +349,7 @@ def test_simple_table() -> rx.Component:
                 "label": "Idade",
                 "width": "40px",
                 "type": "number",
-                "align": "right",
+                "justify": "end",
             },
             {
                 "field": "email",
@@ -330,5 +361,6 @@ def test_simple_table() -> rx.Component:
         "height": "auto",
         "multiple_select": True,
         "entity": "Person",
+        "header_button_variant": "soft",
     }
     return simple_table_component(json_table_definition)
