@@ -1,15 +1,13 @@
 """audit log table for application"""
 
-from sqlalchemy import (
-    JSON,
-)
+from sqlalchemy import JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String
-import reflex as rx
-from .base import SerialID, InsertDate
+
+from .base import SerialID
+from .mixin import InsertDateMixin
 
 
-class AuditLog(SerialID, InsertDate):
+class AuditLog(SerialID, InsertDateMixin):
     """audit data class"""
 
     __table_args__ = {"schema": "audit"}

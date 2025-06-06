@@ -22,7 +22,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
-from .base import Base, Name, PersonType, SimpleTable
+from .base import Base, Name, SimpleTable
+from .enums import PersonType
 
 LOGGER = logging.getLogger(__name__)
 

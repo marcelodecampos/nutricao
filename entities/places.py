@@ -9,7 +9,8 @@ from typing import Optional
 from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import InsertUpdateDate, Name, SerialID, SimpleTable
+from .base import Name, SerialID, SimpleTable
+from .mixin import InsertUpdateDateMixin
 
 
 class Country(SimpleTable):
@@ -72,7 +73,7 @@ class City(Name):
     )
 
 
-class Address(SerialID, InsertUpdateDate):
+class Address(SerialID, InsertUpdateDateMixin):
     """address table"""
 
     __tablename__ = "address"

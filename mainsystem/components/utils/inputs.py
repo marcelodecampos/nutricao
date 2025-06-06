@@ -6,6 +6,52 @@
 import reflex as rx
 
 
+def input_label_component(label: str | None = None):
+    """common label for common inputs"""
+    return rx.text(
+        label or "Label",
+        size="1",
+        weight="medium",
+        text_align="left",
+        width="100%",
+        padding="0",
+        spacing="0",
+    )
+
+
+def input_component(
+    label: str | None = None,
+    icon: rx.Component | None = None,
+    html_id: str | None = None,
+    html_name: str | None = None,
+    required: bool = False,
+    max_length: int = 128,
+    input_type: str = "text",
+    placeholder: str = "Insira um valor",
+) -> rx.Component:
+    """commom input"""
+    return rx.vstack(
+        input_label_component(label),
+        rx.input(
+            rx.cond(icon, rx.input.slot(icon)),
+            id=html_id or "input_name",
+            name=html_name or html_id or "input_name",
+            size="1",
+            width="100%",
+            required=required,
+            max_length=max_length,
+            type=input_type,
+            placeholder=placeholder,
+            padding="0",
+            spacing="0",
+        ),
+        justify="start",
+        width="100%",
+        padding="0.3rem",
+        spacing="0",
+    )
+
+
 def intersect(to_dict: dict, **props) -> dict:
     """merge dict"""
     to_dict |= {k: props[k] for k in props if k in to_dict}
@@ -115,7 +161,7 @@ def common_nickname_input(
     inputprops: dict | None = None,
     labelprops: dict | None = None,
 ) -> rx.Component:
-    """CPF input component."""
+    """Nickname input component."""
     if not inputprops:
         inputprops = {}
     if not labelprops:
@@ -125,4 +171,56 @@ def common_nickname_input(
     inputprops["max_length"] = 32
     inputprops["placeholder"] = "Como gostaria de ser chamado"
     inputprops["required"] = False
-    return common_input(inputprops, labelprops, label_name="Apelido")
+    return input_component(label="Apelido")
+
+
+def nickname_input() -> rx.Component:
+    """Nickname input component."""
+    return input_component(
+        label="Apelido",
+        html_id="id_nickname",
+        html_name="input_nickname",
+        max_length=32,
+        placeholder="Como gostaria de ser chamado",
+    )
+
+
+def birthdate_input() -> rx.Component:
+    """Data de Nascimento input component."""
+    return input_component(
+        label="Data de Nascimento",
+        html_id="id_birthdate",
+        html_name="input_birthdate",
+        input_type="date",
+    )
+
+
+def identification_input() -> rx.Component:
+    """CPF input component."""
+    return input_component(
+        label="CPF",
+        html_id="id_cpf",
+        html_name="input_cpf",
+        placeholder="Insira seu CPF",
+    )
+
+
+def name_input() -> rx.Component:
+    """Name input component."""
+    return input_component(
+        label="Nome",
+        html_id="id_name",
+        html_name="input_name",
+        placeholder="Insira seu nome",
+    )
+
+
+def email_input() -> rx.Component:
+    """Email input component."""
+    return input_component(
+        label="Seu E-mail",
+        html_id="login_id",
+        html_name="login_id",
+        input_type="email",
+        placeholder="user@email.com",
+    )
