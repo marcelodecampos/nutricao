@@ -3,45 +3,25 @@
 # pylint: disable=pointless-string-statement
 """this is the init module for entities module"""
 
+from .access import Permission, Resource, Role
+from .audit_log import AuditLog
+from .base import Base, Name, SerialID, SimpleTable, UniqName
 from .enums import ContDocID, PersonType
-from .base import (
-    Base,
-    InsertDate,
-    InsertUpdateDate,
-    IsValid,
-    Name,
-    SerialID,
-    SimpleTable,
-    UniqName,
-)
+from .food import Food, FoodComponent, FoodComposition, FoodGroup
+from .login import LastUsedPasswords, Login, LoginAudit
 from .person import (
+    Company,
     ContactDocument,
+    Education,
     Gender,
+    MaritalStatus,
+    Person,
     Title,
     User,
-    Person,
-    Company,
-    MaritalStatus,
-    Education,
     UserContactDocument,
 )
-from .places import Country, State, City
-from .food import (
-    Food,
-    FoodGroup,
-    FoodComponent,
-    FoodComposition,
-)
-from .login import (
-    Login,
-    LastUsedPasswords,
-    LoginAudit,
-)
-from .audit_log import AuditLog
-from .access import Role, Permission, Resource
+from .places import City, Country, State
 from .system import Menu
-from .listeners import person_before_update_listener
-
 
 """
     KNOWN PROBLEMS THAT I HAVE WITH SQLMODEL
@@ -76,9 +56,6 @@ SQLALCHEMY_CLASS_REGISTRY = {
     "FoodComposition": FoodComposition,
     "FoodGroup": FoodGroup,
     "Gender": Gender,
-    "InsertDate": InsertDate,
-    "InsertUpdateDate": InsertUpdateDate,
-    "IsValid": IsValid,
     "LastUsedPasswords": LastUsedPasswords,
     "Login": Login,
     "LoginAudit": LoginAudit,
@@ -102,5 +79,4 @@ SQLALCHEMY_CLASS_REGISTRY = {
 __all__ = list(SQLALCHEMY_CLASS_REGISTRY.keys()) + [
     "ContDocID",
     "PersonType",
-    "person_before_update_listener",
 ]

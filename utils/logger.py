@@ -5,6 +5,7 @@
 
 import logging
 import traceback
+
 from rich.logging import RichHandler
 from uvicorn.logging import DefaultFormatter
 
@@ -30,6 +31,7 @@ def get_logger(name: str = None):
 
 
 def get_trace_back_from_exception(logger, exception: Exception):
+    """Get traceback from exception and log it"""
     tb = traceback.extract_tb(exception.__traceback__)
     for frame in tb:
         logger.debug(f"Error on line {frame.lineno} in {frame.filename}")

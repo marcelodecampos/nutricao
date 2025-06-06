@@ -1,3 +1,7 @@
+"""utils package
+This package contains utility functions and classes used across the application.
+"""
+
 from .cpf import CPF
 from .logger import get_logger, get_trace_back_from_exception
 

@@ -3,23 +3,13 @@
 # pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument,too-few-public-methods,too-many-ancestors)
 """local part of exr"""
 
-from typing import Optional
 from decimal import Decimal
-from sqlalchemy import (
-    ForeignKey,
-    UniqueConstraint,
-    Index,
-    Integer,
-    Numeric,
-    String,
-)
+from typing import Optional
+
+from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from . import (
-    SimpleTable,
-    Name,
-    SerialID,
-    InsertUpdateDate,
-)
+
+from .base import InsertUpdateDate, Name, SerialID, SimpleTable
 
 
 class Country(SimpleTable):
@@ -30,15 +20,23 @@ class Country(SimpleTable):
     alpha_3: Mapped[str] = mapped_column(String(3), sort_order=11)
     country_code: Mapped[str] = mapped_column(String(3), sort_order=12)
     iso_3166_2: Mapped[str] = mapped_column(String(16), sort_order=13)
-    region: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, sort_order=14)
-    sub_region: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, sort_order=15)
+    region: Mapped[Optional[str]] = mapped_column(
+        String(16), nullable=True, sort_order=14
+    )
+    sub_region: Mapped[Optional[str]] = mapped_column(
+        String(32), nullable=True, sort_order=15
+    )
     intermediate_region: Mapped[Optional[str]] = mapped_column(
         String(32),
         nullable=True,
         sort_order=16,
     )
-    region_code: Mapped[Optional[str]] = mapped_column(String(3), nullable=True, sort_order=17)
-    sub_region_code: Mapped[Optional[str]] = mapped_column(String(3), nullable=True, sort_order=18)
+    region_code: Mapped[Optional[str]] = mapped_column(
+        String(3), nullable=True, sort_order=17
+    )
+    sub_region_code: Mapped[Optional[str]] = mapped_column(
+        String(3), nullable=True, sort_order=18
+    )
     intermediate_region_code: Mapped[Optional[str]] = mapped_column(
         String(3),
         nullable=True,
@@ -55,7 +53,9 @@ class State(SimpleTable):
     code: Mapped[int] = mapped_column(Integer, unique=True, sort_order=11)
     latitude: Mapped[Decimal] = mapped_column(Numeric(8, 3), sort_order=12)
     longitude: Mapped[Decimal] = mapped_column(Numeric(8, 3), sort_order=13)
-    country_id: Mapped[int] = mapped_column(ForeignKey("country.id"), default="32", sort_order=14)
+    country_id: Mapped[int] = mapped_column(
+        ForeignKey("country.id"), default="32", sort_order=14
+    )
     country: Mapped[Country] = relationship()
 
 
@@ -77,8 +77,12 @@ class Address(SerialID, InsertUpdateDate):
 
     __tablename__ = "address"
     address: Mapped[str] = mapped_column(String(128), sort_order=10)
-    complement: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, sort_order=11)
-    district: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, sort_order=12)
+    complement: Mapped[Optional[str]] = mapped_column(
+        String(128), nullable=True, sort_order=11
+    )
+    district: Mapped[Optional[str]] = mapped_column(
+        String(128), nullable=True, sort_order=12
+    )
     zip_code: Mapped[str] = mapped_column(String(10), sort_order=13)
     city_id: Mapped[int] = mapped_column(ForeignKey("city.id"), sort_order=14)
     city: Mapped[City] = relationship()

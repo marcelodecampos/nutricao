@@ -5,12 +5,15 @@
 
 import json
 from datetime import datetime
-from typing import Optional, Self
 from functools import total_ordering
-from sqlalchemy import DateTime, Integer, String, Boolean, BigInteger, UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
-from sqlalchemy.sql import func
+from typing import Self
+
+from sqlalchemy import BigInteger, Integer, String, UniqueConstraint
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
 from utils.logger import get_logger
+
+from .mixin import InsertUpdateDateMixin, IsValidMixin, ValidateNameMixin
 
 # Create a PostgreSQL database engine
 # Define a model for your users
@@ -37,7 +40,9 @@ class SerialID(Base):
 
     __abstract__ = True
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True, sort_order=1)
+    id: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True, sort_order=1
+    )
 
     def __str__(self):
         return f"User(id={self.id})"
@@ -68,42 +73,13 @@ class SerialID(Base):
         return json.dumps(dict_repr, indent=2)
 
 
-class InsertDate:
-    """Abstract class to implement an insert date and update date on almost every table"""
-
-    time_created: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),  # pylint: disable=not-callable
-        sort_order=98,
-    )
-
-
-class InsertUpdateDate(InsertDate, Base):
-    """Abstract class to implement an insert date and update date on almost every table"""
-
-    __abstract__ = True
-    time_updated: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-        default=func.now(),
-        onupdate=func.now(),  # pylint: disable=not-callable
-        sort_order=99,
-    )
-
-
-class Name(SerialID, InsertUpdateDate):
+class Name(SerialID, InsertUpdateDateMixin, ValidateNameMixin):
     """Abstract class to implement a name on almost every table"""
 
     __abstract__ = True
-    name: Mapped[str] = mapped_column(String(DEFAULT_NAME_FIELD_SIZE), nullable=False, sort_order=2)
-
-    @validates("name")
-    def validate_name(self, key, field: str) -> str:
-        """Should we make it uppercase????"""
-        if field:
-            return field.upper().strip()
-        raise ValueError("Name could not be null")
+    name: Mapped[str] = mapped_column(
+        String(DEFAULT_NAME_FIELD_SIZE), nullable=False, sort_order=2
+    )
 
     def __str__(self):
         return f"Name(name={self.name}, {super().__str__()}"
@@ -121,18 +97,7 @@ class UniqName(UniqueNameMixin, Name):
     __abstract__ = True
 
 
-class IsValid:
-    """IsValid mixin class"""
-
-    is_valid: Mapped[bool] = mapped_column(
-        Boolean,
-        default=True,
-        server_default="t",
-        sort_order=97,
-    )
-
-
-class SimpleTable(IsValid, UniqName):
+class SimpleTable(IsValidMixin, UniqName):
     """Abstract class to implement a name on almost every table"""
 
     __abstract__ = True

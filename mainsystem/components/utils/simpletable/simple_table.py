@@ -3,13 +3,15 @@
 # pylint: disable=not-callable, logging-fstring-interpolation, disable=unnecessary-lambda, disable=no-value-for-parameter
 """init file for utils module."""
 
-from entities import SimpleTable
 import reflex as rx
 
-from .simple_table_state import SimpleTableState
-from .multi_select_column import conditional_multi_select_head_cell, conditional_row_select_cell
 from .h_cell import head_cell
+from .multi_select_column import (
+    conditional_multi_select_head_cell,
+    conditional_row_select_cell,
+)
 from .simple_table_buttons import delete_button
+from .simple_table_state import SimpleTableState
 
 
 def simple_table_row_cell(cell_value, rowindex: int, colindex: int) -> rx.Component:
@@ -82,7 +84,9 @@ def simple_table_component(table_definition: dict) -> rx.Component:
                 SimpleTableState.is_multiple_select,
                 (
                     new_button(),
-                    delete_button(),
+                    delete_button(
+                        on_click_callable=SimpleTableState.on_delete_selected_records,
+                    ),  # type: ignore
                 ),
                 (new_button(),),
             ),

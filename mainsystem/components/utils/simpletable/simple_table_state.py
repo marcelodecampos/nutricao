@@ -5,10 +5,12 @@
 
 import logging
 from typing import Any
-from sqlalchemy import select, inspect
+
 import reflex as rx
-from mainsystem.app_state import AppState
+from sqlalchemy import inspect, select
+
 from entities import SQLALCHEMY_CLASS_REGISTRY
+from mainsystem.app_state import AppState
 
 
 class SimpleTableState(AppState):
@@ -36,7 +38,9 @@ class SimpleTableState(AppState):
         """Handle the deletion of selected records."""
         count = [key for key, value in self.selected_items.items() if value is True]
         itens_to_delete = [self.data[index][1] for index in count]
-        self._logger.debug(f"Deleting selected records in the simple table. {itens_to_delete}")
+        self._logger.debug(
+            f"Deleting selected records in the simple table. {itens_to_delete}"
+        )
         yield rx.toast.info("All selected records will be deleted.")
 
     @rx.event
@@ -59,6 +63,12 @@ class SimpleTableState(AppState):
         self._logger.debug("Selecting inverted IDs in the simple table.")
         yield rx.toast.info("Select inverted IDs is not implemented yet.")
 
+    @rx.event
+    async def on_delete_selected_records(self):
+        """Handle the deletion of selected records."""
+        self._logger.debug("Deleting selected records in the simple table.")
+        yield rx.toast.warning("Delete selected records is not implemented yet.")
+
     async def load_data(self, table_definition: dict):
         """Execute a SQL query and return the results."""
         entity = table_definition.get("entity", None)
@@ -70,7 +80,9 @@ class SimpleTableState(AppState):
         with rx.session() as session:
             limit = table_definition.get("limit", 200)
             if limit > 200:
-                self._logger.warning(f"Limit {limit} is greater than 200, setting to 200.")
+                self._logger.warning(
+                    f"Limit {limit} is greater than 200, setting to 200."
+                )
                 limit = 200
 
             entity_class = SQLALCHEMY_CLASS_REGISTRY.get(entity, None)
@@ -98,7 +110,9 @@ class SimpleTableState(AppState):
         )
         async with self:
             self.columns = table_definition.get("columns", [])
-            self.fields = [column["field"] for column in table_definition.get("columns", [])]
+            self.fields = [
+                column["field"] for column in table_definition.get("columns", [])
+            ]
             entity = table_definition.get("entity", None)
             self.data = table_definition.get("data", [])
             self.multiple_select = table_definition.get("multiple_select", False)
@@ -117,7 +131,10 @@ class SimpleTableState(AppState):
             if index in self.selected_items:
                 del self.selected_items[index]
         yield rx.toast.info(
-            f"Checkbox for index {index} {value} changed. List has {len(self.selected_items)} selected items."
+            (
+                f"Checkbox for index {index} {value} changed. "
+                f"List has {len(self.selected_items)} selected items."
+            )
         )
 
     def get_column_list(self, index: int) -> list[Any]:

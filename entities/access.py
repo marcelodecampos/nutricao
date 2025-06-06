@@ -3,14 +3,11 @@
 # pylint: disable=(not-callable, inherit-non-class, no-name-in-module, unused-argument)
 """Module File"""
 
-import reflex as rx
+
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from . import SimpleTable
-
-
-from .base import DEFAULT_NAME_FIELD_SIZE
+from .base import DEFAULT_NAME_FIELD_SIZE, SimpleTable
 
 
 class Role(SimpleTable):
@@ -32,4 +29,6 @@ class Resource(SimpleTable):
 
     __table_args__ = {"schema": "access"}
     __tablename__ = "resource"
-    url: Mapped[str] = mapped_column(String(DEFAULT_NAME_FIELD_SIZE), nullable=False, sort_order=3)
+    url: Mapped[str] = mapped_column(
+        String(DEFAULT_NAME_FIELD_SIZE), nullable=False, sort_order=3
+    )

@@ -4,30 +4,27 @@
 """Module File"""
 
 import logging
-from typing import Optional, Self
 import re
-from datetime import date
+from datetime import date, datetime
+from typing import Optional, Self
+
 from dateutil.relativedelta import relativedelta
-import reflex as rx
 from sqlalchemy import (
-    String,
     CHAR,
-    Date,
-    ForeignKey,
     Boolean,
     CheckConstraint,
-    UniqueConstraint,
+    Date,
+    ForeignKey,
     Index,
+    String,
+    UniqueConstraint,
+    event,
 )
-from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
-from . import (
-    Base,
-    Name,
-    SimpleTable,
-    ContDocID,
-    PersonType,
-)
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
+from .base import Base, Name, PersonType, SimpleTable
+
+LOGGER = logging.getLogger(__name__)
 
 TYPE_PERSON_CHECK_CONSTRAINT = CheckConstraint("person_type IN ('F', 'J', NULL)")
 CONTDOC_CHECK_CONSTRAINT = CheckConstraint("contdoc_type IN ('C', 'D')")
@@ -72,15 +69,21 @@ class ContactDocument(SimpleTable):
     """Base class User"""
 
     __tablename__ = "contact_document"
-    mask: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, sort_order=3)
+    mask: Mapped[Optional[str]] = mapped_column(
+        String(128), nullable=True, sort_order=3
+    )
     allow_login: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default="f", sort_order=4
     )
     validation_regex: Mapped[Optional[str]] = mapped_column(
         String(128), nullable=True, sort_order=5
     )
-    sub_regex: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, sort_order=6)
-    contdoc_type: Mapped[str] = mapped_column(CHAR, CONTDOC_CHECK_CONSTRAINT, sort_order=7)
+    sub_regex: Mapped[Optional[str]] = mapped_column(
+        String(128), nullable=True, sort_order=6
+    )
+    contdoc_type: Mapped[str] = mapped_column(
+        CHAR, CONTDOC_CHECK_CONSTRAINT, sort_order=7
+    )
     person_type: Mapped[Optional[str]] = mapped_column(
         CHAR, TYPE_PERSON_CHECK_CONSTRAINT, nullable=True, sort_order=8
     )
@@ -104,7 +107,9 @@ class UserContactDocument(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    contdoc_id: Mapped[int] = mapped_column(ForeignKey("contact_document.id"), primary_key=True)
+    contdoc_id: Mapped[int] = mapped_column(
+        ForeignKey("contact_document.id"), primary_key=True
+    )
     name: Mapped[str] = mapped_column(String(128), index=True, primary_key=True)
     is_main: Mapped[bool] = mapped_column(Boolean, server_default="f", default=False)
 
@@ -117,7 +122,11 @@ class UserContactDocument(Base):
     @validates("name")
     def validate_name(self, key: str, field: str):
         """validate contdoc field"""
-        if self.contdoc and isinstance(self.contdoc, ContactDocument) and self.contdoc.sub_regex:
+        if (
+            self.contdoc
+            and isinstance(self.contdoc, ContactDocument)
+            and self.contdoc.sub_regex
+        ):
             field = re.sub(self.contdoc.sub_regex, "", field)
         return field
 
@@ -266,6 +275,16 @@ class Person(User):
         raise ValueError("CPF could not be null")
 
 
+@event.listens_for(Person, "before_update", propagate=True)
+def person_before_update_listener(mapper, connection, target):
+    """before update listener"""
+    LOGGER.debug(f"Mapper: {type(mapper)}-{str(mapper)}")
+    LOGGER.debug(f"Connection: {type(connection)}-{str(connection)}")
+    LOGGER.debug(f"Target: {type(target)}-{str(target)}")
+    if isinstance(target, Person):
+        target.time_updated = datetime.today()
+
+
 class Company(User):
     """Base class Company"""
 
@@ -274,7 +293,9 @@ class Company(User):
         "polymorphic_identity": PersonType.COMPANY.value,
     }
 
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True, sort_order=3)
+    id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), primary_key=True, sort_order=3
+    )
     cnpj: Mapped[Optional[str]] = mapped_column(
         String(CNPJ_SIZE),
         nullable=True,

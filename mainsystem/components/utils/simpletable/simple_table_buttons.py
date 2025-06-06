@@ -3,21 +3,30 @@
 # pylint: disable=not-callable, logging-fstring-interpolation, disable=unnecessary-lambda, disable=no-value-for-parameter
 """Simple table buttons for the simple table component."""
 
+from typing import Callable, Optional
+
 import reflex as rx
 
 
-def new_button(button_label: str | None = None) -> rx.Component:
+def new_button(
+    button_label: str | None = None,
+    on_click_callable: Optional[Callable[[], None]] = None,
+) -> rx.Component:
     """Create a new button for the simple table."""
     return rx.button(
         rx.icon("plus", size=20),
         button_label or "Novo",
         id="simple-table-new-record-button",
         color_scheme="grass",
-        on_click=SimpleTableState.handle_create_record,
+        on_click=on_click_callable,
     )
 
 
-def delete_button(title: str | None = None, button_label: str | None = None) -> rx.Component:
+def delete_button(
+    title: str | None = None,
+    button_label: str | None = None,
+    on_click_callable: Optional[Callable[[], None]] = None,
+) -> rx.Component:
     """Create a delete button for the simple table."""
 
     return rx.alert_dialog.root(
@@ -35,5 +44,33 @@ def delete_button(title: str | None = None, button_label: str | None = None) -> 
                 "Tem certeza que deseja apagar estas informações? Esta ação não pode ser desfeita!",
                 size="2",
             ),
+            rx.inset(
+                rx.table.root(
+                    rx.table.header(),
+                    rx.table.body(),
+                ),
+                side="x",
+                margin_top="24px",
+                margin_bottom="24px",
+            ),
+            rx.flex(
+                rx.alert_dialog.cancel(
+                    rx.button(
+                        "Cancelar",
+                        variant="soft",
+                        color_scheme="gray",
+                    ),
+                ),
+                rx.alert_dialog.action(
+                    rx.button(
+                        "Excluir",
+                        color_scheme="red",
+                        on_click=on_click_callable,
+                    ),
+                ),
+                spacing="3",
+                justify="end",
+            ),
+            style={"max_width": 500},
         ),
     )

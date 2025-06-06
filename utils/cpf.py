@@ -1,8 +1,7 @@
 """modulo de validação de cpf"""
 
-from random import randint
-
 from locale import normalize
+from random import randint
 from re import sub as regex_substitute
 from typing import Any
 
@@ -144,18 +143,17 @@ class CPF:
         res = sum(res) % 11
         if res > 1:
             return 11 - res
-        else:
-            return 0
+        return 0
 
 
 if __name__ == "__main__":
-    cpf = CPF("59469390415")
-    print(cpf.formatted)
-    print(cpf)
-    target: str = cpf
-    print(f"Target: {target}")
-    print(cpf.is_valid())
-    cpf = CPF("012345")
-    print(cpf.formatted)
-    print(cpf)
-    print(cpf.is_valid())
+    cpf_ = CPF("59469390415")
+    print(cpf_.formatted)
+    print(cpf_)
+    target_: str = cpf_
+    print(f"Target: {target_}")
+    print(cpf_.is_valid())
+    cpf_ = CPF("012345")
+    print(cpf_.formatted)
+    print(cpf_)
+    print(cpf_.is_valid())

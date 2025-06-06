@@ -1,22 +1,27 @@
 """local part of exr"""
 
 import json
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import ForeignKey, String, BigInteger, Integer, DateTime
+from sqlalchemy import BigInteger, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
-from .base import IsValid, Base
+
+from .base import Base
+from .mixin import InsertUpdateDateMixin, IsValidMixin
 
 
-class Menu(IsValid, Base):
+class Menu(IsValidMixin, InsertUpdateDateMixin, Base):
     """system menu data class"""
 
     __tablename__ = "menu"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True, sort_order=1)
-    name: Mapped[str] = mapped_column(String(32), nullable=False, sort_order=2, unique=True)
+    id: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True, sort_order=1
+    )
+    name: Mapped[str] = mapped_column(
+        String(32), nullable=False, sort_order=2, unique=True
+    )
     url: Mapped[Optional[str]] = mapped_column(
         String(64),
         nullable=True,
@@ -30,18 +35,6 @@ class Menu(IsValid, Base):
         ForeignKey("menu.id"),
         sort_order=7,
         nullable=True,
-    )
-    time_created: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),  # pylint: disable=not-callable
-        sort_order=98,
-    )
-    time_updated: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-        onupdate=func.now(),  # pylint: disable=not-callable
-        sort_order=99,
     )
 
     parent = relationship("Menu", remote_side=[id], foreign_keys=[parent_id])

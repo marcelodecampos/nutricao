@@ -3,10 +3,10 @@
 # pylint: disable=too-few-public-methods
 """init module for mixin aux class component."""
 
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import String, DateTime, Boolean
+from sqlalchemy import Boolean, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, validates
 from sqlalchemy.sql import func
 
@@ -32,8 +32,8 @@ class UpdateDateMixin:
     )
 
 
-class NameMixin:
-    name: Mapped[str] = mapped_column(String(DEFAULT_NAME_FIELD_SIZE), nullable=False, sort_order=2)
+class ValidateNameMixin:
+    """Mixin class to validate name field."""
 
     @validates("name")
     def validate_name(self, key, field: str) -> str:  # pylint: disable=unused-argument
@@ -41,6 +41,12 @@ class NameMixin:
         if field:
             return field.upper().strip()
         raise ValueError("Name could not be null")
+
+
+class NameMixin(ValidateNameMixin):
+    name: Mapped[str] = mapped_column(
+        String(DEFAULT_NAME_FIELD_SIZE), nullable=False, sort_order=2
+    )
 
     def __str__(self):
         return f"Name(name={self.name}, {super().__str__()}"

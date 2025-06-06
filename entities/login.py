@@ -3,27 +3,26 @@
 """login entity modules"""
 
 from datetime import datetime
+
 import bcrypt
 from sqlalchemy import (
     BigInteger,
+    Boolean,
+    DateTime,
     ForeignKey,
     Index,
     Integer,
+    PrimaryKeyConstraint,
     String,
     text,
-    Boolean,
-    DateTime,
-    PrimaryKeyConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
-from utils.logger import get_logger
-from . import (
-    Base,
-    InsertDate,
-    InsertUpdateDate,
-    User,
-)
 
+from utils.logger import get_logger
+
+from .base import Base
+from .mixin import InsertDateMixin, InsertUpdateDateMixin
+from .person import User
 
 LOGGER = get_logger("state")
 
@@ -34,7 +33,7 @@ login_fk = ForeignKey(
 )
 
 
-class Login(InsertUpdateDate):
+class Login(InsertUpdateDateMixin, Base):
     """login"""
 
     __tablename__ = "login"
@@ -57,7 +56,9 @@ class Login(InsertUpdateDate):
     )
     password_expires: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=text("now() + interval '1 year'"),  # pylint: disable=not-callable
+        server_default=text(
+            "now() + interval '1 year'"
+        ),  # pylint: disable=not-callable
     )
 
     user: Mapped[User] = relationship(lazy="immediate")
@@ -69,6 +70,7 @@ class Login(InsertUpdateDate):
     def validate_password(self, key: str, field: str) -> str:
         """crypt this password"""
         # TODO : validate password strength
+        LOGGER.debug(f"validating password {key}={field}")
         if field.startswith("$2b$") and len(field) >= 60:
             # already encrypted... pass
             return field
@@ -78,7 +80,7 @@ class Login(InsertUpdateDate):
         return hashed_password.decode()
 
 
-class LoginAudit(InsertDate, Base):
+class LoginAudit(InsertDateMixin, Base):
     """class audit login"""
 
     __tablename__ = "login_audit"
@@ -94,7 +96,7 @@ class LoginAudit(InsertDate, Base):
     __table_args__ = (__created_at_key, __pk)
 
 
-class LastUsedPasswords(InsertDate, Base):
+class LastUsedPasswords(InsertDateMixin, Base):
     """class Last Used"""
 
     __tablename__ = "last_used_password"
