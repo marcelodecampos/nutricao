@@ -2370,14 +2370,14 @@ dev = ["build", "twine"]
 
 [[package]]
 name = "reflex-hosting-cli"
-version = "0.1.49"
+version = "0.1.50"
 description = "Reflex Hosting CLI"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "reflex_hosting_cli-0.1.49-py3-none-any.whl", hash = "sha256:ea7d8d6770d2cfb74fce564d918d7a9aadae7499b2dc978774b6bfaf54f6296c"},
-    {file = "reflex_hosting_cli-0.1.49.tar.gz", hash = "sha256:708536fe14f15ed02cc67e6dc15f311b000e7117ea0637aa2f8764957b797e44"},
+    {file = "reflex_hosting_cli-0.1.50-py3-none-any.whl", hash = "sha256:5285f9eaf80858e6c5dca6cd705c0f5924a243697f58814938a73f1083cab143"},
+    {file = "reflex_hosting_cli-0.1.50.tar.gz", hash = "sha256:d594d3734f4fff4ad33618aab0d0c1d9130b7148cab75ac85adb9f6a49055a48"},
 ]
 
 [package.dependencies]
