@@ -3,13 +3,7 @@
 # pylint: disable=pointless-string-statement
 """this is the init module for entities module"""
 
-from .access import Permission, Resource, Role
-from .audit_log import AuditLog
-from .base import Base, Name, SerialID, SimpleTable, UniqName
-from .enums import ContDocID, PersonType
-from .food import Food, FoodComponent, FoodComposition, FoodGroup
-from .login import LastUsedPasswords, Login, LoginAudit
-from .person import (
+from user import (
     Company,
     ContactDocument,
     Education,
@@ -20,8 +14,15 @@ from .person import (
     User,
     UserContactDocument,
 )
+
+from .access import Permission, Resource, Role
+from .audit_log import AuditLog
+from .base import Base, Name, SerialID, SimpleTable, UniqName
+from .food import Food, FoodComponent, FoodComposition, FoodGroup
+from .login import LastUsedPasswords, Login, LoginAudit
 from .places import City, Country, State
 from .system import Menu
+from .user.enums import ContDocID, PersonType
 
 """
     KNOWN PROBLEMS THAT I HAVE WITH SQLMODEL

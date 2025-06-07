@@ -5,13 +5,10 @@
 
 import reflex as rx
 
-from .h_cell import head_cell
-from .multi_select_column import (
-    conditional_multi_select_head_cell,
-    conditional_row_select_cell,
-)
-from .simple_table_buttons import delete_button
+from .multi_select_column import conditional_row_select_cell
+from .simple_table_header import simple_table_header
 from .simple_table_state import SimpleTableState
+from .simple_table_title import simple_table_title
 
 
 def simple_table_row_cell(cell_value, rowindex: int, colindex: int) -> rx.Component:
@@ -62,96 +59,26 @@ def new_button() -> rx.Component:
     )
 
 
-def simple_table_component() -> rx.Component:
+def simple_table_component(
+    title: str | None = None,
+    columns: list[dict[str, str | int | float]] | None = None,
+    height: str | None = None,
+) -> rx.Component:
     """Create a simple table component."""
     return rx.vstack(
-        rx.hstack(
-            rx.heading(
-                SimpleTableState.title,
-                class_id="simple-table-title",
-                size="4",
-                align="left",
-                trim="both",
-                width="100%",
-                weight="light",
-                id="simple-table-heading",
-            ),
-            rx.cond(
-                SimpleTableState.is_multiple_select,
-                (
-                    new_button(),
-                    delete_button(
-                        on_click_callable=SimpleTableState.on_delete_selected_records,
-                    ),  # type: ignore
-                ),
-                (new_button(),),
-            ),
-            width="100%",
-        ),
+        simple_table_title(title=title),
         rx.table.root(
-            rx.table.header(
-                rx.table.row(
-                    conditional_multi_select_head_cell(
-                        SimpleTableState.multiple_select,
-                        SimpleTableState.handle_id_select_all,  # type: ignore
-                        SimpleTableState.handle_id_select_invert,  # type: ignore
-                        SimpleTableState.handle_id_select_none,  # type: ignore
-                    ),
-                    rx.foreach(
-                        SimpleTableState.columns,
-                        lambda col, index: head_cell(
-                            index,
-                            col.get("label", col.get("field", "")),
-                        ),
-                    ),
-                ),
-                id="simple-table-header",
-            ),
+            simple_table_header(columns=columns),
             simple_table_body(),
             width="100%",
             height="100%",
             class_id="simple-table",
             size="1",
             id="simple-table-root",
+            border="1px solid green",
         ),
-        height="100vh",
+        height=height or "90vh",
+        border="1px solid white",
+        padding="0",
+        spacing="0",
     )
-
-
-def configure_columns() -> list[dict[str, str | int | float]]:
-    """Configure the columns for the simple table."""
-    columns: list[dict[str, str | int | float]] = [
-        {
-            "field": "formatted_cpf",
-            "label": "CPF",
-            "width": "110px",
-        },
-        {
-            "field": "name",
-            "label": "Nome",
-        },
-        {
-            "field": "formatted_birthdate",
-            "label": "Data de Nascimento",
-            "width": "80px",
-        },
-        {
-            "field": "age",
-            "label": "Idade",
-            "width": "40px",
-            "type": "number",
-            "justify": "end",
-        },
-        {
-            "field": "email",
-            "label": "Email",
-        },
-    ]
-    SimpleTableState.columns = columns
-    return columns
-
-
-def test_simple_table() -> rx.Component:
-    """Test the simple_table function."""
-
-    return simple_table_component()

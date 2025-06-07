@@ -4,12 +4,16 @@
 """init module form application"""
 
 import reflex as rx
+
 from mainsystem.components.login import login_form
-from mainsystem.components.signup import signup_form, signup_ok_form
-from mainsystem.components.reset_password import reset_password_form, forgot_password_form
-from mainsystem.components.utils import commom_layout, test_simple_table
 from mainsystem.components.menu import menu_layout
+from mainsystem.components.reset_password import (
+    forgot_password_form,
+    reset_password_form,
+)
+from mainsystem.components.signup import signup_form, signup_ok_form
 from mainsystem.components.user import my_data
+from mainsystem.components.utils import commom_layout, test_simple_table
 
 APP_ROUTES: list[dict] = [
     {

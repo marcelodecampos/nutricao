@@ -22,7 +22,8 @@ from .inputs import (
     nickname_input,
     password_input,
 )
-from .simpletable.simple_table import simple_table_component, test_simple_table
+from .simpletable.simple_table import simple_table_component
+from .simpletable.simple_table_test import test_simple_table
 from .user_info import user_info_options
 
 __all__ = [
