@@ -41,7 +41,7 @@ class EconimicActivityDivision(SimpleTable):
     """Base class for Economic Activity Division"""
 
     __tablename__ = "economic_activity_division"
-    section_id: Mapped[int] = mapped_column(
+    parent_id: Mapped[int] = mapped_column(
         ForeignKey("economic_activity_section.id"),
         nullable=False,
         sort_order=2,
@@ -49,7 +49,7 @@ class EconimicActivityDivision(SimpleTable):
     code: Mapped[str] = mapped_column(
         String(8), nullable=False, unique=True, sort_order=3
     )
-    section: Mapped[Optional[EconimicActivitySection]] = Relationship()
+    parent: Mapped[Optional[EconimicActivitySection]] = Relationship()
 
     def __str__(self):
         return f"EconimicActivityDivision(code={self.code}, description={self.name})"
@@ -59,7 +59,7 @@ class EconimicActivityGroup(SimpleTable):
     """Base class for Economic Activity Group"""
 
     __tablename__ = "economic_activity_group"
-    division_id: Mapped[int] = mapped_column(
+    parent_id: Mapped[int] = mapped_column(
         ForeignKey("economic_activity_division.id"),
         nullable=False,
         sort_order=2,
@@ -67,7 +67,7 @@ class EconimicActivityGroup(SimpleTable):
     code: Mapped[str] = mapped_column(
         String(8), nullable=False, unique=True, sort_order=3
     )
-    division: Mapped[Optional[EconimicActivityDivision]] = Relationship()
+    parent: Mapped[Optional[EconimicActivityDivision]] = Relationship()
 
     def __str__(self):
         return f"EconimicActivityGroup(code={self.code}, description={self.name})"
@@ -77,7 +77,7 @@ class EconimicActivityClass(SimpleTable):
     """Base class for Economic Activity Class"""
 
     __tablename__ = "economic_activity_class"
-    group_id: Mapped[int] = mapped_column(
+    parent_id: Mapped[int] = mapped_column(
         ForeignKey("economic_activity_group.id"),
         nullable=False,
         sort_order=2,
@@ -85,7 +85,7 @@ class EconimicActivityClass(SimpleTable):
     code: Mapped[str] = mapped_column(
         String(16), nullable=False, unique=True, sort_order=3
     )
-    group: Mapped[Optional[EconimicActivityGroup]] = Relationship()
+    parent: Mapped[Optional[EconimicActivityGroup]] = Relationship()
 
     def __str__(self):
         return f"EconimicActivityClass(code={self.code}, description={self.name})"
@@ -95,7 +95,7 @@ class EconimicActivity(SimpleTable):
     """Base class for Economic Activity"""
 
     __tablename__ = "economic_activity"
-    class_id: Mapped[int] = mapped_column(
+    parent_id: Mapped[int] = mapped_column(
         ForeignKey("economic_activity_class.id"),
         nullable=False,
         sort_order=2,
@@ -103,7 +103,7 @@ class EconimicActivity(SimpleTable):
     code: Mapped[str] = mapped_column(
         String(16), nullable=False, unique=True, sort_order=3
     )
-    class_: Mapped[Optional[EconimicActivityClass]] = Relationship()
+    parent: Mapped[Optional[EconimicActivityClass]] = Relationship()
 
     def __str__(self):
         return f"EconimicActivity(code={self.code}, description={self.name})"
