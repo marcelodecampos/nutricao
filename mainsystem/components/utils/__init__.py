@@ -20,8 +20,8 @@ from .inputs import (
     intersect,
     name_input,
     nickname_input,
+    password_input,
 )
-from .password import password_input
 from .simpletable.simple_table import simple_table_component, test_simple_table
 from .user_info import user_info_options
 
@@ -46,6 +46,7 @@ __all__ = [
     "identification_input",
     "birthdate_input",
     "nickname_input",
+    "password_input",
 ]
 
 __version__ = "0.1.0"

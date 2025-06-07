@@ -6,16 +6,46 @@
 import reflex as rx
 
 
-def input_label_component(label: str | None = None):
+def input_label_component(
+    label: str | None = None,
+    show_link: bool = False,
+    link_href: str | None = None,
+    link_text: str | None = None,
+    size: str = "2",
+) -> rx.Component:
     """common label for common inputs"""
-    return rx.text(
-        label or "Label",
-        size="1",
-        weight="medium",
-        text_align="left",
-        width="100%",
-        padding="0",
-        spacing="0",
+    commom_props = {
+        "size": size or "2",
+        "weight": "medium",
+        "text_align": "left",
+        "padding": "0",
+        "spacing": "0",
+    }
+    return rx.cond(
+        show_link,
+        rx.hstack(
+            rx.text(
+                label or "Label",
+                width="100%",
+                **commom_props,
+            ),
+            rx.link(
+                link_text or "Link",
+                href=link_href or "#",
+                width="100%",
+                size=commom_props.get("size", "1"),
+                justify="end",
+                text_align="right",
+            ),
+            justify="between",
+            **commom_props,
+            width="100%",
+        ),
+        rx.text(
+            label or "Label",
+            width="100%",
+            **commom_props,
+        ),
     )
 
 
@@ -28,15 +58,16 @@ def input_component(
     max_length: int = 128,
     input_type: str = "text",
     placeholder: str = "Insira um valor",
+    **props: dict | None,
 ) -> rx.Component:
     """commom input"""
     return rx.vstack(
-        input_label_component(label),
+        input_label_component(label, size="2", **props),
         rx.input(
             rx.cond(icon, rx.input.slot(icon)),
             id=html_id or "input_name",
             name=html_name or html_id or "input_name",
-            size="1",
+            size="2",
             width="100%",
             required=required,
             max_length=max_length,
@@ -47,8 +78,7 @@ def input_component(
         ),
         justify="start",
         width="100%",
-        padding="0.3rem",
-        spacing="0",
+        spacing="1",
     )
 
 
@@ -223,4 +253,23 @@ def email_input() -> rx.Component:
         html_name="login_id",
         input_type="email",
         placeholder="user@email.com",
+    )
+
+
+def password_input(
+    show_link: bool = False,
+    link_href: str | None = None,
+    link_text: str | None = None,
+) -> rx.Component:
+    """Password input component."""
+    return input_component(
+        label="Senha",
+        html_id="id_password",
+        html_name="password",
+        input_type="password",
+        placeholder="Entre com sua senha",
+        icon=rx.input.slot(rx.icon("lock")),
+        show_link=show_link,
+        link_href=link_href,
+        link_text=link_text,
     )

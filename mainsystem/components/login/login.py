@@ -4,6 +4,8 @@
 """Login form component for the application."""
 
 import reflex as rx
+
+from ..utils import email_input, password_input
 from .state import LoginState
 
 
@@ -23,56 +25,13 @@ def other_login_options() -> rx.Component:
             content="Google",
         ),
         rx.tooltip(
-            rx.icon_button(rx.icon(tag="twitter"), variant="soft", size="3", tooltip="Twitter"),
+            rx.icon_button(
+                rx.icon(tag="twitter"), variant="soft", size="3", tooltip="Twitter"
+            ),
             content="Twitter",
         ),
         spacing="4",
         direction="row",
-        width="100%",
-    )
-
-
-def email_input() -> rx.Component:
-    """Email input component."""
-    return rx.vstack(
-        rx.text("Seu E-mail", size="3", weight="medium", text_align="left", width="100%"),
-        rx.input(
-            rx.input.slot(rx.icon("user")),
-            placeholder="user@reflex.dev",
-            type="email",
-            id="login_id",
-            name="login_id",
-            size="3",
-            width="100%",
-            required=True,
-            text=LoginState.user_email,
-        ),
-        spacing="2",
-        justify="start",
-        width="100%",
-    )
-
-
-def password_input() -> rx.Component:
-    """Password input component."""
-    return rx.vstack(
-        rx.hstack(
-            rx.text("Senha", size="3", weight="medium"),
-            rx.link("Esqueceu a senha?", href="/forgot_password", size="3"),
-            justify="between",
-            width="100%",
-        ),
-        rx.input(
-            rx.input.slot(rx.icon("lock")),
-            placeholder="Entre com sua senha",
-            type="password",
-            name="password",
-            id="password",
-            size="3",
-            width="100%",
-            required=True,
-        ),
-        spacing="2",
         width="100%",
     )
 
@@ -83,23 +42,27 @@ def login_form() -> rx.Component:
         rx.card(
             rx.vstack(
                 rx.flex(
-                    rx.heading("Entrar na sua conta", size="6", as_="h2", width="100%"),
+                    rx.heading("Entrar na sua conta", size="4", width="100%"),
                     rx.hstack(
-                        rx.text("Novo por aqui?", size="3", text_align="left"),
-                        rx.link("Inscreva-se", href="/signup", size="3"),
-                        spacing="2",
+                        rx.text("Novo por aqui?", size="2", text_align="left"),
+                        rx.link("Inscreva-se", href="/signup", size="2"),
+                        spacing="1",
                         opacity="0.8",
                         width="100%",
                     ),
                     justify="start",
                     direction="column",
-                    spacing="4",
+                    spacing="1",
                     width="100%",
                 ),
                 rx.form(
                     rx.flex(
                         email_input(),
-                        password_input(),
+                        password_input(
+                            show_link=True,
+                            link_href="/forgot_password",
+                            link_text="Esqueceu a senha?",
+                        ),
                         rx.button(
                             "Entrar",
                             size="3",

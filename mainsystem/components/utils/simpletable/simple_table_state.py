@@ -7,9 +7,7 @@ import logging
 from typing import Any
 
 import reflex as rx
-from sqlalchemy import inspect, select
 
-from entities import SQLALCHEMY_CLASS_REGISTRY
 from mainsystem.app_state import AppState
 
 
@@ -68,57 +66,6 @@ class SimpleTableState(AppState):
         """Handle the deletion of selected records."""
         self._logger.debug("Deleting selected records in the simple table.")
         yield rx.toast.warning("Delete selected records is not implemented yet.")
-
-    async def load_data(self, table_definition: dict):
-        """Execute a SQL query and return the results."""
-        entity = table_definition.get("entity", None)
-        if not entity:
-            entityname = entity.__name__ or ""
-            errmsg = f"{entityname} entity is not defined in the table definition."
-            raise ValueError(errmsg)
-        self._logger.debug(f"loading entity: {entity}")
-        with rx.session() as session:
-            limit = table_definition.get("limit", 200)
-            if limit > 200:
-                self._logger.warning(
-                    f"Limit {limit} is greater than 200, setting to 200."
-                )
-                limit = 200
-
-            entity_class = SQLALCHEMY_CLASS_REGISTRY.get(entity, None)
-            query = select(entity_class).limit(limit)
-            result = session.scalars(query).fetchall()
-            for row in result:
-                data = [getattr(row, field, None) for field in self.fields]
-                index = inspect(row).identity
-                self.data.append(data)
-                self.index.append(index)
-                self.title = table_definition.get("title", "Simple Table")
-            self._logger.debug(f"Data loaded: {self.data}")
-            self.selected_items = {}
-            session.rollback()  ##always readonly
-
-    @rx.event(background=True)
-    async def handle_table_definition(self, table_definition: dict):
-        """Handle the setting of the table definition."""
-        if not table_definition:
-            errmsg = "Table definition cannot be empty."
-            self._logger.error(errmsg)
-            raise ValueError(errmsg)
-        self._logger.debug(
-            f"Setting table definition for the simple table. TableDefinition={table_definition}"
-        )
-        async with self:
-            self.columns = table_definition.get("columns", [])
-            self.fields = [
-                column["field"] for column in table_definition.get("columns", [])
-            ]
-            entity = table_definition.get("entity", None)
-            self.data = table_definition.get("data", [])
-            self.multiple_select = table_definition.get("multiple_select", False)
-            if entity:
-                self._logger.debug(f"loading entity {entity} data")
-                await self.load_data(table_definition)
 
     @rx.event
     async def handle_checkbox_on_change(self, value: bool, index: int):

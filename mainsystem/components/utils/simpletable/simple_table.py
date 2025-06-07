@@ -62,12 +62,8 @@ def new_button() -> rx.Component:
     )
 
 
-def simple_table_component(table_definition: dict) -> rx.Component:
+def simple_table_component() -> rx.Component:
     """Create a simple table component."""
-    if not table_definition:
-        raise ValueError("Table definition cannot be empty.")
-    if not table_definition.get("columns"):
-        raise ValueError("Columns table definitions cannot be empty.")
     return rx.vstack(
         rx.hstack(
             rx.heading(
@@ -108,7 +104,6 @@ def simple_table_component(table_definition: dict) -> rx.Component:
                             col.get("label", col.get("field", "")),
                         ),
                     ),
-                    style={"position": "sticky", "top": "0", "zIndex": "1"},
                 ),
                 id="simple-table-header",
             ),
@@ -119,50 +114,44 @@ def simple_table_component(table_definition: dict) -> rx.Component:
             size="1",
             id="simple-table-root",
         ),
-        on_mount=lambda: SimpleTableState.handle_table_definition(
-            table_definition=table_definition
-        ),  # pylint: disable=no-value-for-parameter
         height="100vh",
     )
+
+
+def configure_columns() -> list[dict[str, str | int | float]]:
+    """Configure the columns for the simple table."""
+    columns: list[dict[str, str | int | float]] = [
+        {
+            "field": "formatted_cpf",
+            "label": "CPF",
+            "width": "110px",
+        },
+        {
+            "field": "name",
+            "label": "Nome",
+        },
+        {
+            "field": "formatted_birthdate",
+            "label": "Data de Nascimento",
+            "width": "80px",
+        },
+        {
+            "field": "age",
+            "label": "Idade",
+            "width": "40px",
+            "type": "number",
+            "justify": "end",
+        },
+        {
+            "field": "email",
+            "label": "Email",
+        },
+    ]
+    SimpleTableState.columns = columns
+    return columns
 
 
 def test_simple_table() -> rx.Component:
     """Test the simple_table function."""
 
-    json_table_definition = {
-        "data": [],
-        "columns": [
-            {
-                "field": "formatted_cpf",
-                "label": "CPF",
-                "width": "110px",
-            },
-            {
-                "field": "name",
-                "label": "Nome",
-            },
-            {
-                "field": "formatted_birthdate",
-                "label": "Data de Nascimento",
-                "width": "80px",
-            },
-            {
-                "field": "age",
-                "label": "Idade",
-                "width": "40px",
-                "type": "number",
-                "justify": "end",
-            },
-            {
-                "field": "email",
-                "label": "Email",
-            },
-        ],
-        "title": "Tabela Muito Simples",
-        "width": "100%",
-        "height": "auto",
-        "multiple_select": True,
-        "entity": "Person",
-        "header_button_variant": "soft",
-    }
-    return simple_table_component(json_table_definition)
+    return simple_table_component()

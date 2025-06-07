@@ -6,12 +6,15 @@ This module contains the state of the application,
 including user information and other relevant data."""
 
 import logging
+
 import bcrypt
 import reflex as rx
-from sqlalchemy import select
+from sqlalchemy import text
 from sqlalchemy.exc import NoResultFound
-from entities import UserContactDocument, Login
+
+from entities import Login
 from mainsystem import AppState
+from utils import is_valid_email
 
 logger = logging.getLogger("mainsystem")
 
@@ -25,19 +28,24 @@ class LoginState(AppState):
     async def find_login_by_document(db_session, form_data: dict) -> Login:
         """Find a user by their document."""
         # This is a placeholder implementation. Replace with actual logic to find a user by their document.
-        logger.debug("find_login_by_document")
+        identification: str = form_data.get("login_id", "")
+        logger.debug(f"find_login_by_document {identification}")
         # Print out the handlers
-        query = (
-            select(Login)
-            .select_from(UserContactDocument)
-            .join(Login, Login.user_id == UserContactDocument.user_id)
-            .where(UserContactDocument.name == form_data["login_id"])
+        query_str = (
+            "select id from users where email = :identification"
+            if is_valid_email(identification)
+            else "select id from person where cpf = :identification"
         )
+        logger.debug(f"query_str: {query_str}")
         login_entity: Login = None
         ret_value = None
         try:
-            stmt = db_session.scalars(query)
-            login_entity = stmt.one()
+            query = text(query_str).bindparams(identification=identification)
+            stmt = db_session.exec(query)
+            resultset: int = stmt.one()
+            logger.debug(f"user_id: {resultset}")
+            login_entity = db_session.get(Login, resultset[0])
+            logger.debug(f"Login: {login_entity}")
             ret_value = login_entity
             if not bcrypt.checkpw(
                 form_data["password"].encode(),
